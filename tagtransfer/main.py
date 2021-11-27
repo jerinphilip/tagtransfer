@@ -4,7 +4,8 @@ from lxml import etree
 from collections import defaultdict, namedtuple
 import sys
 
-from .pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+import pybergamot
+from pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 
 class MarkedUpPair:
     """ 
@@ -22,7 +23,7 @@ class MarkedUpPair:
 
 class Dataset:
     """ A Dataset, similar to torch.Dataset """
-    def __init__(self, source_path, target_path, strict_markup=False):
+    def __init__(self, source_path, target_path, strict_markup=False, filter_fn = lambda x: True):
 
         # Salesforce dataset is json.
         source_json = self._load_json(source_path)
@@ -36,13 +37,13 @@ class Dataset:
             self._data[key].target = value
             assert(self._data[key].id == key)
 
-        self._sorted_keys = sorted(self._data.keys())
+        self._sorted_keys = [ key for key in sorted(self._data.keys()) if filter_fn(self._data[key]) ]
 
     def __getitem__(self, idx):
         return self._data[self._sorted_keys[idx]]
 
     def __len__(self):
-        return len(self._data)
+        return len(self._sorted_keys)
 
     def _load_json(self, json_path):
         with open(json_path) as fp:
@@ -50,12 +51,14 @@ class Dataset:
             text = data["text"]
             return text
 
-def stringify_children(node):
+def stringify_children(content):
     """ 
     Utility function to strip xml/html tags from an etree node. Used when
     disabled HTML translation to isolate errors to HTML pipeline or no-HTML
     pipeline.
     """
+    xml_value = '<root> {} </root>'.format(content)
+    node = etree.fromstring(xml_value)
     return ''.join(node.itertext())
 
 if __name__ == '__main__':
@@ -66,8 +69,9 @@ if __name__ == '__main__':
     parser.add_argument('--model-config', type=str, help="Path to model file to use in tag-transfer translation", required=True)
     parser.add_argument('--num-workers', type=int, help="Number of worker threads to use to translate", default=4)
     parser.add_argument('--cache-size', type=int, help="How many sentences to hold in cache", default=2000)
-    parser.add_argument('--cache-mutex-buckets', type=int, help="How many mutex buckets to use to reduce contention in cache among workers", default=20)
-    parser.add_argument('--disable-html', action='store_true', help="Disable HTML pipeline")
+    parser.add_argument('--cache-mutex-buckets', type=int, help="How many mutex buckets to use to reduce contention in cache among workers.", default=20)
+    parser.add_argument('--disable-markup-in-translation', action='store_true', help="Disable markup pipeline. Useful in diagnosing if things work without markup.")
+    parser.add_argument('--include-non-markup', action='store_true', help="Only feed entries containing markup to the pipeline.")
 
     args = parser.parse_args()
 
@@ -87,32 +91,32 @@ if __name__ == '__main__':
     options = ResponseOptions();
     options.alignment = True
     options.qualityScores = True
-    options.HTML = not args.disable_html
+    options.HTML = not args.disable_markup_in_translation
 
+    def filter_fn(pair):
+        # The text as provided by salesforce contains tags but is not valid
+        # xml, we wrap around a root to get lxml parsing superpowers.
+        # Only if the actual text contains tags, need we bother.
+        xml_value = '<root> {} </root>'.format(pair.source)
+        tree = etree.fromstring(xml_value)
+        child_count = len(tree.xpath(".//*"))
+        return child_count > 0
 
-    dataset = Dataset(args.source_data, args.target_data)
+    dataset = Dataset(args.source_data, args.target_data, filter_fn = filter_fn if not args.include_non_markup else lambda x: True)
+
+    source_texts = []
+    for idx in range(len(dataset)):
+        pair = dataset[idx]
+        source_texts.append(pair.source)
+
+    responses = service.translate(model, pybergamot.VectorString(source_texts), options)
 
     for idx in range(len(dataset)):
         pair = dataset[idx]
-
-        # The text as provided by salesforce contains tags but is not valid
-        # xml, we wrap around a root to get lxml parsing superpowers.
-        xml_value = '<root> {} </root>'.format(pair.source)
-        tree = etree.fromstring(xml_value)
-
-        # Only if the actual text contains tags, need we bother.
-        child_count = len(tree.xpath(".//*"))
-        if child_count > 0:
-            try:
-                source_text = pair.source if options.HTML else stringify_children(tree)
-                response = service.translate(model, source_text, options)
-                print('[src] > ', response.source.text)
-                print('[hyp] > ', response.target.text)
-                print('[tgt] > ', pair.target)
-                print()
-            except:
-                print("Failure on: ", pair.source, file=sys.stderr)
-                raise
-                pass
+        response = responses[idx]
+        print('[src] > ', response.source.text)
+        print('[hyp] > ', response.target.text)
+        print('[tgt] > ', pair.target)
+        print()
 
 
