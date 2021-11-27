@@ -1,9 +1,10 @@
 import json
 from argparse import ArgumentParser
 from lxml import etree
-from .pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 from collections import defaultdict, namedtuple
+import sys
 
+from .pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 
 class MarkedUpPair:
     def __init__(self, _id, source, target=None):
@@ -91,7 +92,7 @@ if __name__ == '__main__':
                 print('[tgt] > ', pair.target)
                 print()
             except:
-                print("Failure on: ", value, file=sys.stderr)
+                print("Failure on: ", pair.source, file=sys.stderr)
                 pass
 
 
