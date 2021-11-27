@@ -43,6 +43,18 @@ class Dataset:
             text = data["text"]
             return text
 
+def stringify_children(node):
+    return ''.join(node.itertext())
+
+    from lxml.etree import tostring
+    from itertools import chain
+    parts = ([node.text] +
+            list(chain(*([c.text, tostring(c), c.tail] for c in node.getchildren()))) +
+            [node.tail])
+    # filter removes possible Nones in texts and tails
+    return ''.join(filter(None, parts))
+
+
 
 if __name__ == '__main__':
     # Setup a parser.
@@ -53,6 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-workers', type=int, help="Number of worker threads to use to translate", default=4)
     parser.add_argument('--cache-size', type=int, help="How many sentences to hold in cache", default=2000)
     parser.add_argument('--cache-mutex-buckets', type=int, help="How many mutex buckets to use to reduce contention in cache among workers", default=20)
+    parser.add_argument('--disable-html', action='store_true', help="Disable HTML pipeline")
 
     args = parser.parse_args()
 
@@ -72,7 +85,7 @@ if __name__ == '__main__':
     options = ResponseOptions();
     options.alignment = True
     options.qualityScores = True
-    options.HTML = True
+    options.HTML = not args.disable_html
 
 
     dataset = Dataset(args.source_data, args.target_data)
@@ -86,13 +99,15 @@ if __name__ == '__main__':
         # Only if the actual text contains tags, need we bother.
         if child_count > 0:
             try:
-                response = service.translate(model, pair.source, options)
+                source_text = pair.source if options.HTML else stringify_children(tree)
+                response = service.translate(model, source_text, options)
                 print('[src] > ', response.source.text)
                 print('[hyp] > ', response.target.text)
                 print('[tgt] > ', pair.target)
                 print()
             except:
                 print("Failure on: ", pair.source, file=sys.stderr)
+                raise
                 pass
 
 
