@@ -7,17 +7,24 @@ import sys
 from .pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 
 class MarkedUpPair:
+    """ 
+    namedtuple is not editable after creation, so we have this record type.
+    This is used in Dataset below to create pairs of entries for markup-translation.
+    """
     def __init__(self, _id, source, target=None):
         self.id = _id
         self.source = source
         self.target = target
 
     def __repr__(self):
+        """ Convenience repr function """
         return {'id': self.id, 'source': self.source, 'target': self.target}.__repr__()
 
 class Dataset:
     """ A Dataset, similar to torch.Dataset """
     def __init__(self, source_path, target_path, strict_markup=False):
+
+        # Salesforce dataset is json.
         source_json = self._load_json(source_path)
         target_json = self._load_json(target_path)
         self._data = {}
@@ -44,17 +51,12 @@ class Dataset:
             return text
 
 def stringify_children(node):
+    """ 
+    Utility function to strip xml/html tags from an etree node. Used when
+    disabled HTML translation to isolate errors to HTML pipeline or no-HTML
+    pipeline.
+    """
     return ''.join(node.itertext())
-
-    from lxml.etree import tostring
-    from itertools import chain
-    parts = ([node.text] +
-            list(chain(*([c.text, tostring(c), c.tail] for c in node.getchildren()))) +
-            [node.tail])
-    # filter removes possible Nones in texts and tails
-    return ''.join(filter(None, parts))
-
-
 
 if __name__ == '__main__':
     # Setup a parser.
@@ -89,14 +91,17 @@ if __name__ == '__main__':
 
 
     dataset = Dataset(args.source_data, args.target_data)
+
     for idx in range(len(dataset)):
         pair = dataset[idx]
-        # The text is not valid xml, we wrap around a root to get lxml parsing superpowers.
+
+        # The text as provided by salesforce contains tags but is not valid
+        # xml, we wrap around a root to get lxml parsing superpowers.
         xml_value = '<root> {} </root>'.format(pair.source)
         tree = etree.fromstring(xml_value)
-        child_count = len(tree.xpath(".//*"))
 
         # Only if the actual text contains tags, need we bother.
+        child_count = len(tree.xpath(".//*"))
         if child_count > 0:
             try:
                 source_text = pair.source if options.HTML else stringify_children(tree)
