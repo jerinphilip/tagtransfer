@@ -26,7 +26,8 @@ Next, copy the generated python-binding built shared library `.so` file built fr
 library has to be built due to `-march=native` being present in builds, which
 takes advantage of vector-instructions to speed up translations.
 
-On the author's system, an example looks like:
+On the author's system, with a virtual environment using python3 in the current
+folder, an example looks like:
 
 ```
 cp ../lemonade/build/pybergamot.cpython-39-x86_64-linux-gnu.so env/lib/python3.9/site-packages/
@@ -38,9 +39,9 @@ translation dataset, please use the following command:
 
 ```
 python3 -m tagtransfer.main \
-	--source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
-	--target-data localization-xml-mt-master/data/ende/ende_de_dev.json \
-	--model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
+   --source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
+   --target-data localization-xml-mt-master/data/ende/ende_de_dev.json \
+   --model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
 ```
 
 To download the model and configuration mentioned above, you may use
@@ -72,9 +73,9 @@ If all works well, the output looks something like the following:
 ```
 
 
-## TODO:
+## TODO
 
-- [ ] Crawl web and test on random HTML segements.
+- [ ] Crawl web and test on random HTML segments.
 - [ ] Evaluation methodology to compare multiple HTML tag-transfer methods following [Automatic Bilingual Markup Transfer](https://aclanthology.org/2021.findings-emnlp.299.pdf).
-- [ ] Simplify instructions to run this repository.
+- [ ] Simplify instructions to run code in this repository.
 
