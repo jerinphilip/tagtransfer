@@ -1,0 +1,7 @@
+localization-xml-mt-master/
+env/
+*.so
+*.pyc
+__pycache__
+
+.*.sw[op]
