@@ -1,5 +1,6 @@
 import json
-from argparse import ArgumentParser
+import sacrebleu
+import argparse
 from lxml import etree
 from collections import defaultdict, namedtuple
 import sys
@@ -7,6 +8,8 @@ import typing as t
 
 import pybergamot
 from pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+
+SACREBLEU_METRIC = 'bleu'
 
 class MarkedUpPair:
     """ 
@@ -90,9 +93,41 @@ def matchXML(hypothesis: etree._Element, gold: etree._Element):
 
     return True
 
+def add_sacreblue_dummy_args(parser):
+    # parser.add_argument("file1", type=str)
+    # parser.add_argument("file2", type=str)
+    parser.add_argument("-o", "--output", type=argparse.FileType('w'), metavar="FILE", default=sys.stdout)
+    parser.add_argument("-e", "--allow-error-rate", type=float, metavar="FLOAT", default=0)
+    parser.add_argument("-q", "--quiet", action="store_true")
+
+    # BLEU related arguments: These are required to use sacreBleu
+    parser.add_argument('--smooth-method', '-s', choices=sacrebleu.metrics.METRICS[SACREBLEU_METRIC].SMOOTH_DEFAULTS.keys(), default='exp',
+                            help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
+    parser.add_argument('--smooth-value', '-sv', type=float, default=None,
+                         help='The value to pass to the smoothing technique, only used for floor and add-k. Default floor: {}, add-k: {}.'.format(
+                         sacrebleu.metrics.METRICS[SACREBLEU_METRIC].SMOOTH_DEFAULTS['floor'], sacrebleu.metrics.METRICS[SACREBLEU_METRIC].SMOOTH_DEFAULTS['add-k']))
+    parser.add_argument('--tokenize', '-tok', choices=sacrebleu.tokenizers.TOKENIZERS.keys(), default='13a',
+      help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `mecab` for Japanese and `mteval-v13a` otherwise.')
+    parser.add_argument('-lc', action='store_true', default=False, help='Use case-insensitive BLEU (default: False)')
+    parser.add_argument('--force', default=False, action='store_true',
+                            help='insist that your tokenized input is actually detokenized')
+
+
+    # Print args
+    parser.add_argument('--score-only', '-b', default=False, action='store_true',
+                            help='output only the BLEU score')
+    parser.add_argument('--width', '-w', type=int, default=1,
+                            help='floating point width (default: %(default)s)')
+
+    parser.add_argument('--sentence-level', '-sl', default=False, action='store_true',
+                            help='Compute sentence-level assertions')
+
+
+
+
 if __name__ == '__main__':
     # Setup a parser.
-    parser = ArgumentParser("Load a dataset, run tag transfer using bergamot")
+    parser = argparse.ArgumentParser("Load a dataset, run tag transfer using bergamot")
     parser.add_argument('--source-data', type=str, help="Path to json file from localization-xml-mt (salesforce)", required=True)
     parser.add_argument('--target-data', type=str, help="Path to json file from localization-xml-mt (salesforce)", required=True)
     parser.add_argument('--model-config', type=str, help="Path to model file to use in tag-transfer translation", required=True)
@@ -102,7 +137,10 @@ if __name__ == '__main__':
     parser.add_argument('--disable-markup-in-translation', action='store_true', help="Disable markup pipeline. Useful in diagnosing if things work without markup.")
     parser.add_argument('--include-non-markup', action='store_true', help="Only feed entries containing markup to the pipeline.")
 
+    add_sacreblue_dummy_args(parser)
     args = parser.parse_args()
+
+    metric = sacrebleu.metrics.METRICS[SACREBLEU_METRIC](args)
 
     # TODO(jerinphilip): Improve syntax upstream.
     config = ServiceConfig()
@@ -137,13 +175,19 @@ if __name__ == '__main__':
 
     responses = service.translate(model, pybergamot.VectorString(source_texts), options)
 
+    # Produce metrics.
     for idx in range(len(dataset)):
         pair = dataset[idx]
         response = responses[idx]
-        if(matchXML(wrapGenXML(pair.target), wrapGenXML(response.target.text))):
-            print('[src] > ', response.source.text)
-            print('[hyp] > ', response.target.text)
-            print('[tgt] > ', pair.target)
-            print()
+        isMatch = matchXML(wrapGenXML(pair.target), wrapGenXML(response.target.text))
+
+        print('[src] > ', response.source.text)
+        print('[hyp] > ', response.target.text)
+        print('[tgt] > ', pair.target)
+        bleu_with_tags = metric.sentence_score(response.target.text, [pair.target])
+        bleu_without_tags  = metric.sentence_score(stringify_children(response.target.text), [stringify_children(pair.target)])
+        print("With tags: ", bleu_with_tags)
+        print("Without tags: ", bleu_without_tags)
+        print()
 
 
