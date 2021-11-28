@@ -77,8 +77,6 @@ The following models are available:
    15. de-en-tiny German-English tiny
 
 ```
-[lemonade/scripts/model\_manager.py](https://github.com/jerinphilip/lemonade/blob/unstable/scripts/model_manager.py)
-
 
 If all works well, the output looks something like the following:
 
