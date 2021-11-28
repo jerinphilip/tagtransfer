@@ -21,16 +21,24 @@ This can be done by using:
 bash scripts/download-data.sh ./
 ```
 
-Next, copy the generated python-binding built shared library `.so` file built from
+Next, build bergamot python module with bindings to the C++ library from
 [lemonade/pull#13](https://github.com/jerinphilip/lemonade/pull/13/). The
 library has to be built due to `-march=native` being present in builds, which
 takes advantage of vector-instructions to speed up translations.
 
-On the author's system, with a virtual environment using python3 in the current
-folder, an example looks like:
+```bash
+# clone
+git clone https://github.com/jerinphilip/lemonade
+git checkout html-exps
 
-```
-cp ../lemonade/build/pybergamot.cpython-39-x86_64-linux-gnu.so env/lib/python3.9/site-packages/
+# Setup venv
+python3 -m venv env
+.env/bin/activate
+python3 -m pip install wheel # If wheel missing
+
+# Build wheel
+python3 setup.py bdist_wheel
+python3 -m pip install dist/bergamot-*.whl # Install the wheel file into virtual environment.
 ```
 
 

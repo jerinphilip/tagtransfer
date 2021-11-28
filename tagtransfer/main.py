@@ -6,8 +6,8 @@ from collections import defaultdict, namedtuple
 import sys
 import typing as t
 
-import pybergamot
-from pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+import bergamot
+from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 
 SACREBLEU_METRIC = 'bleu'
 
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         pair = dataset[idx]
         source_texts.append(pair.source)
 
-    responses = service.translate(model, pybergamot.VectorString(source_texts), options)
+    responses = service.translate(model, bergamot.VectorString(source_texts), options)
 
     # Produce metrics.
     for idx in range(len(dataset)):
