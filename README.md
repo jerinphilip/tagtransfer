@@ -52,7 +52,31 @@ python3 -m tagtransfer.main \
    --model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
 ```
 
-To download the model and configuration mentioned above, you may use
+To download the model and configuration mentioned above, you may use the package-manager in bergamot python module.
+
+```bash
+$ python3 -m bergamot.pkgmgr fetch # fetches available models
+$ python3 -m bergamot.pkgmgr ls
+
+The following models are available:
+
+    1. cs-en-base Czech-English base
+    2. cs-en-tiny Czech-English tiny
+    3. en-cs-base English-Czech base
+    4. en-cs-tiny English-Czech tiny
+    5. en-de-base English-German base
+    6. en-de-tiny English-German tiny
+    7. es-en-tiny Spanish-English tiny
+    8. en-es-tiny English-Spanish tiny
+    9. et-en-tiny Estonian-English tiny
+   10. en-et-tiny English-Estonian tiny
+   11. is-en-tiny Icelandic-English tiny
+   12. nb-en-tiny Norwegian (Bokmal)-English tiny
+   13. nn-en-tiny Norwegian (Nynorsk)-English tiny
+   14. de-en-base German-English base
+   15. de-en-tiny German-English tiny
+
+```
 [lemonade/scripts/model\_manager.py](https://github.com/jerinphilip/lemonade/blob/unstable/scripts/model_manager.py)
 
 
