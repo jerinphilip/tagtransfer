@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from lxml import etree
 from collections import defaultdict, namedtuple
 import sys
+import typing as t
 
 import pybergamot
 from pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
@@ -51,15 +52,43 @@ class Dataset:
             text = data["text"]
             return text
 
+
+def wrapGenXML(content):
+    # The text as provided by salesforce contains tags but is not valid
+    # xml, we wrap around a root to get lxml parsing superpowers.
+    xml_value = '<root>{}</root>'.format(content)
+    node = etree.fromstring(xml_value)
+    return node
+
 def stringify_children(content):
     """ 
     Utility function to strip xml/html tags from an etree node. Used when
     disabled HTML translation to isolate errors to HTML pipeline or no-HTML
     pipeline.
     """
-    xml_value = '<root> {} </root>'.format(content)
-    node = etree.fromstring(xml_value)
-    return ''.join(node.itertext())
+    return ''.join(wrapGenXML(content).itertext())
+
+def matchXML(hypothesis: etree._Element, gold: etree._Element):
+    """
+    Try to match tree structure with gold translation with tags. This is a
+    binary value, and works only if strongly matches.
+
+    Taken from https://github.com/salesforce/localization-xml-mt/blob/master/scripts/evaluate.py
+    """
+    if hypothesis.tag != gold.tag:
+        return False
+
+    hypothesis = list(hypothesis.iterchildren())
+    gold = list(gold.iterchildren())
+
+    if len(hypothesis) != len(gold):
+        return False
+
+    for (h, g) in zip(hypothesis, gold):
+        if not matchXML(h, g):
+            return False
+
+    return True
 
 if __name__ == '__main__':
     # Setup a parser.
@@ -94,11 +123,8 @@ if __name__ == '__main__':
     options.HTML = not args.disable_markup_in_translation
 
     def filter_fn(pair):
-        # The text as provided by salesforce contains tags but is not valid
-        # xml, we wrap around a root to get lxml parsing superpowers.
         # Only if the actual text contains tags, need we bother.
-        xml_value = '<root> {} </root>'.format(pair.source)
-        tree = etree.fromstring(xml_value)
+        tree = wrapGenXML(pair.source)
         child_count = len(tree.xpath(".//*"))
         return child_count > 0
 
@@ -114,9 +140,10 @@ if __name__ == '__main__':
     for idx in range(len(dataset)):
         pair = dataset[idx]
         response = responses[idx]
-        print('[src] > ', response.source.text)
-        print('[hyp] > ', response.target.text)
-        print('[tgt] > ', pair.target)
-        print()
+        if(matchXML(wrapGenXML(pair.target), wrapGenXML(response.target.text))):
+            print('[src] > ', response.source.text)
+            print('[hyp] > ', response.target.text)
+            print('[tgt] > ', pair.target)
+            print()
 
 
