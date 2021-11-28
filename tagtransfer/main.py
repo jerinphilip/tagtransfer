@@ -94,12 +94,6 @@ def matchXML(hypothesis: etree._Element, gold: etree._Element):
     return True
 
 def add_sacreblue_dummy_args(parser):
-    # parser.add_argument("file1", type=str)
-    # parser.add_argument("file2", type=str)
-    parser.add_argument("-o", "--output", type=argparse.FileType('w'), metavar="FILE", default=sys.stdout)
-    parser.add_argument("-e", "--allow-error-rate", type=float, metavar="FLOAT", default=0)
-    parser.add_argument("-q", "--quiet", action="store_true")
-
     # BLEU related arguments: These are required to use sacreBleu
     parser.add_argument('--smooth-method', '-s', choices=sacrebleu.metrics.METRICS[SACREBLEU_METRIC].SMOOTH_DEFAULTS.keys(), default='exp',
                             help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
@@ -111,19 +105,6 @@ def add_sacreblue_dummy_args(parser):
     parser.add_argument('-lc', action='store_true', default=False, help='Use case-insensitive BLEU (default: False)')
     parser.add_argument('--force', default=False, action='store_true',
                             help='insist that your tokenized input is actually detokenized')
-
-
-    # Print args
-    parser.add_argument('--score-only', '-b', default=False, action='store_true',
-                            help='output only the BLEU score')
-    parser.add_argument('--width', '-w', type=int, default=1,
-                            help='floating point width (default: %(default)s)')
-
-    parser.add_argument('--sentence-level', '-sl', default=False, action='store_true',
-                            help='Compute sentence-level assertions')
-
-
-
 
 if __name__ == '__main__':
     # Setup a parser.
@@ -188,6 +169,7 @@ if __name__ == '__main__':
         bleu_without_tags  = metric.sentence_score(stringify_children(response.target.text), [stringify_children(pair.target)])
         print("With tags: ", bleu_with_tags)
         print("Without tags: ", bleu_without_tags)
+        print("Matches perfectly? ", "Yes" if isMatch else "No")
         print()
 
 
