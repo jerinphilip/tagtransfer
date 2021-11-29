@@ -5,35 +5,33 @@ import sys
 from collections import Counter
 from collections import defaultdict
 
-from .pybergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+import bergamot
+from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 
-def build_model(service, configPath):
-    model = service.modelFromConfigPath(configPath)
-    return model
 
-def build_service():
+
+if __name__ == '__main__':
     config = ServiceConfig()
     config.numWorkers = 4;
     config.cacheSize = 2000;
     config.cacheMutexBuckets = 18;
-    return Service(config);
-
-
-if __name__ == '__main__':
-    ende = "/home/jerin/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml"
-    service = build_service()
+    service = Service(config);
 
     options = ResponseOptions();
     options.alignment = True
     options.qualityScores = True
     options.HTML = True
 
-    model = build_model(service, ende)
+    configPath = "/home/jerin/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml"
+    model = service.modelFromConfigPath(configPath)
+
     from .examples import EXAMPLES
 
     for example in EXAMPLES:
         try:
-            response = service.translate(model, example["input"], options)
+            samples = bergamot.VectorString([example["input"]])
+            responses = service.translate(model, samples, options)
+            response = responses[0]
             print('[src] > ', response.source.text)
             print('[hyp] > ', response.target.text)
             print('[tgt] > ', example["expectedProjectedString"])
