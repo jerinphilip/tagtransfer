@@ -153,4 +153,10 @@ EXAMPLES = [
         "expectedProjectedString":
           '<div id="n0"><br><b id="n1">(50 years ago):</b> Chandrasekhara Raman, <b id="n2">Indian physicist,</b> dies (n 1888; in pictures), <b id="n3">Nobel laureate in</b> 1930.</div>',
       },
+      {
+        "input": "In early 2018, security researchers disclosed two major vulnerabilities, known as <a href=\"https://en.wikipedia.org/wiki/Meltdown_(security_vulnerability)\" target=\"_blank\">Meltdown</a> and <a href=\"https://en.wikipedia.org/wiki/Spectre_(security_vulnerability)\" target=\"_blank\">Spectre</a>",
+        "expectedPlainString": "",
+        "translation": "",
+        "expectedProjectedString": ""
+      }
 ]
