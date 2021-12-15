@@ -69,8 +69,10 @@ if __name__ == '__main__':
                     print("Failure on", file=sys.stderr)
                     print(response.source.text, file=sys.stderr)
                     print(response.target.text, file=sys.stderr)
+                    raise
         except:
             print("Failure on", inner, file=sys.stderr)
+            raise
 
 
 
