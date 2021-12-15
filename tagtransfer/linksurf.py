@@ -1,6 +1,7 @@
 import requests
 import lxml
 from lxml import html, etree
+from lxml.html import xhtml_to_html
 import argparse
 import cssselect
 import bergamot
@@ -50,17 +51,26 @@ if __name__ == '__main__':
         fragment = etree.tostring(x, pretty_print=True)
         print(fragment)
 
-    responses = service.translate(model, bergamot.VectorString(source_texts), options)
-    for response in responses:
+    def convert_legal(x):
+        fragment = html.fromstring(x)
+        return etree.tostring(fragment, method='html', pretty_print=True)
+
+    for text in source_texts:
+        inner = convert_legal(text)
         try:
-            source = html.fromstring(response.source.text)
-            target = html.fromstring(response.target.text)
-            print_node(source)
-            print_node(target)
+            responses = service.translate(model, bergamot.VectorString([inner]), options)
+            for response in responses:
+                try:
+                    source = html.fromstring(response.source.text)
+                    target = html.fromstring(response.target.text)
+                    print_node(source)
+                    print_node(target)
+                except:
+                    print("Failure on", file=sys.stderr)
+                    print(response.source.text, file=sys.stderr)
+                    print(response.target.text, file=sys.stderr)
         except:
-            print("Failure on", file=sys.stderr)
-            print(response.source.text, file=sys.stderr)
-            print(response.target.text, file=sys.stderr)
+            print("Failure on", inner, file=sys.stderr)
 
 
 
