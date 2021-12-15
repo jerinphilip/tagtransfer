@@ -5,6 +5,7 @@ import argparse
 import cssselect
 import bergamot
 from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+import sys
 
 
 if __name__ == '__main__':
@@ -37,12 +38,13 @@ if __name__ == '__main__':
     options.qualityScores = True
     options.HTML = True
 
-    paragraphs = tree.cssselect("div")
+    paragraphs = tree.cssselect("p")
 
     source_texts = [] 
     for paragraph in paragraphs:
         fragment = etree.tostring(paragraph, pretty_print=True)
-        source_texts.append(fragment)
+        if fragment:
+            source_texts.append(fragment)
 
     def print_node(x):
         fragment = etree.tostring(x, pretty_print=True)
@@ -56,8 +58,9 @@ if __name__ == '__main__':
             print_node(source)
             print_node(target)
         except:
-            print(response.source.text)
-            print(response.target.text)
+            print("Failure on", file=sys.stderr)
+            print(response.source.text, file=sys.stderr)
+            print(response.target.text, file=sys.stderr)
 
 
 
