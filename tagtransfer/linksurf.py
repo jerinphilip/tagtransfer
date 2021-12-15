@@ -62,9 +62,10 @@ if __name__ == '__main__':
             for response in responses:
                 try:
                     source = html.fromstring(response.source.text)
-                    target = html.fromstring(response.target.text)
                     print_node(source)
-                    print_node(target)
+                    if response.target.text:
+                        target = html.fromstring(response.target.text)
+                        print_node(target)
                 except:
                     print("Failure on", file=sys.stderr)
                     print(response.source.text, file=sys.stderr)
