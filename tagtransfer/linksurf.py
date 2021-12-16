@@ -1,12 +1,61 @@
 import requests
 import lxml
 from lxml import html, etree
+import tidylib
 from lxml.html import xhtml_to_html
 import argparse
 import cssselect
 import bergamot
 from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 import sys
+
+def batched(service, model, inners):
+    try:
+        responses = service.translate(model, bergamot.VectorString(inners), options)
+        for response in responses:
+            try:
+                source = html.fromstring(response.source.text)
+                print("Source: ", "-"*30)
+                print_node(source)
+                if response.target.text:
+                    print("Target: ", "-"*30)
+                    target = html.fromstring(response.target.text)
+                    print_node(target)
+                print()
+            except:
+                print("Failure on", file=sys.stderr)
+                print(response.source.text, file=sys.stderr)
+                print(response.target.text, file=sys.stderr)
+                raise
+    except:
+        print("Failure on", inners, file=sys.stderr)
+        raise
+
+def single_sample(service, model, inners):
+    for inner in inners:
+        print(inner)
+        try:
+            responses = service.translate(model, bergamot.VectorString([inner]), options)
+            for response in responses:
+                try:
+                    source = html.fromstring(response.source.text)
+                    print("Source: ", "-"*30)
+                    print_node(source)
+                    if response.target.text:
+                        print("Target: ", "-"*30)
+                        target = html.fromstring(response.target.text)
+                        print_node(target)
+                    print()
+                except:
+                    print("Failure on", file=sys.stderr)
+                    print(response.source.text, file=sys.stderr)
+                    print(response.target.text, file=sys.stderr)
+                    raise
+        except:
+            print("Failure on", inner, file=sys.stderr)
+            raise
+
+
 
 
 if __name__ == '__main__':
@@ -20,7 +69,24 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     response = requests.get(args.url)
-    tree = html.fromstring(response.text)
+
+    BASE_OPTIONS = {
+      "indent": 1,           # Pretty; not too much of a performance hit
+      "tidy-mark": 0,        # No tidy meta tag in output
+      "wrap": 0,             # No wrapping
+      "alt-text": "",        # Help ensure validation
+      "doctype": 'strict',   # Little sense in transitional for tool-generated markup...
+      "force-output": 1,     # May not get what you expect but you will get something
+      "output-html": 1,
+      "new-empty-tags": "source",
+    }
+
+
+    # Use tidylib first round.
+    document, errors = tidylib.tidy_document(response.text, BASE_OPTIONS)
+    print(errors)
+
+    tree = html.fromstring(document)
 
     # TODO(jerinphilip): Improve syntax upstream.
     config = ServiceConfig()
@@ -54,29 +120,11 @@ if __name__ == '__main__':
 
     def convert_legal(x):
         fragment = html.fromstring(x)
-        return etree.tostring(fragment, method='html', pretty_print=True)
+        document, errors = tidylib.tidy_fragment(etree.tostring(fragment, method='html', pretty_print=True))
+        return document
 
     inners = list(map(convert_legal, source_texts))
-    try:
-        responses = service.translate(model, bergamot.VectorString(inners), options)
-        for response in responses:
-            try:
-                source = html.fromstring(response.source.text)
-                print("Source: ", "-"*30)
-                print_node(source)
-                if response.target.text:
-                    print("Target: ", "-"*30)
-                    target = html.fromstring(response.target.text)
-                    print_node(target)
-                print()
-            except:
-                print("Failure on", file=sys.stderr)
-                print(response.source.text, file=sys.stderr)
-                print(response.target.text, file=sys.stderr)
-                raise
-    except:
-        print("Failure on", inner, file=sys.stderr)
-        raise
+    single_sample(service, model, inners)
 
 
 

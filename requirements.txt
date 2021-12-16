@@ -1,8 +1,9 @@
 colorama==0.4.4
 lxml==4.6.4
-numpy==1.21.4
+numpy
 portalocker==2.0.0
 PyYAML==6.0
 regex==2021.11.10
 sacrebleu==1.5.1
 tabulate==0.8.9
+cssselect
