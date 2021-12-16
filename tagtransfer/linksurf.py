@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-workers', type=int, help="Number of worker threads to use to translate", default=1)
     parser.add_argument('--cache-size', type=int, help="How many sentences to hold in cache", default=2000)
     parser.add_argument('--cache-mutex-buckets', type=int, help="How many mutex buckets to use to reduce contention in cache among workers.", default=20)
+    parser.add_argument('--tag', type=str, help="Tag to check if translates", default='p')
 
     args = parser.parse_args()
     response = requests.get(args.url)
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     options.qualityScores = True
     options.HTML = True
 
-    paragraphs = tree.cssselect("p")
+    paragraphs = tree.cssselect(args.tag)
 
     source_texts = [] 
     for paragraph in paragraphs:
@@ -55,25 +56,27 @@ if __name__ == '__main__':
         fragment = html.fromstring(x)
         return etree.tostring(fragment, method='html', pretty_print=True)
 
-    for text in source_texts:
-        inner = convert_legal(text)
-        try:
-            responses = service.translate(model, bergamot.VectorString([inner]), options)
-            for response in responses:
-                try:
-                    source = html.fromstring(response.source.text)
-                    print_node(source)
-                    if response.target.text:
-                        target = html.fromstring(response.target.text)
-                        print_node(target)
-                except:
-                    print("Failure on", file=sys.stderr)
-                    print(response.source.text, file=sys.stderr)
-                    print(response.target.text, file=sys.stderr)
-                    raise
-        except:
-            print("Failure on", inner, file=sys.stderr)
-            raise
+    inners = list(map(convert_legal, source_texts))
+    try:
+        responses = service.translate(model, bergamot.VectorString(inners), options)
+        for response in responses:
+            try:
+                source = html.fromstring(response.source.text)
+                print("Source: ", "-"*30)
+                print_node(source)
+                if response.target.text:
+                    print("Target: ", "-"*30)
+                    target = html.fromstring(response.target.text)
+                    print_node(target)
+                print()
+            except:
+                print("Failure on", file=sys.stderr)
+                print(response.source.text, file=sys.stderr)
+                print(response.target.text, file=sys.stderr)
+                raise
+    except:
+        print("Failure on", inner, file=sys.stderr)
+        raise
 
 
 
