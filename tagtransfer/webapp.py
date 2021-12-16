@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import request
+from lxml import html, etree
 import requests
 from .html_translator import HTMLTranslator
 import argparse
@@ -12,7 +13,10 @@ def hello_world():
     url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
     response = requests.get(url)
     document = translator.translate(response.text)
-    return document
+    tree = html.fromstring(document)
+    head = tree.xpath('/html/head')[0]
+    head.insert(1, html.fragment_fromstring('<base href="{}" target="_blank">'.format(url)))
+    return etree.tostring(tree)
 
 
 if __name__ == "__main__":

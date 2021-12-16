@@ -17,7 +17,7 @@ BASE_OPTIONS = {
 
 
 def convert(node):
-    render = etree.tostring(node)
+    render = etree.tostring(node).decode("utf-8")
     tidy, errors = tidylib.tidy_fragment(render, BASE_OPTIONS)
     return tidy
 
@@ -43,17 +43,24 @@ class HTMLTranslator:
         options.HTML = True
 
         # Get nodes. Replace them in place.
-        document, errors = tidylib.tidy_document(page, BASE_OPTIONS)
-        tree = html.fromstring(document)
+        # document, errors = tidylib.tidy_document(page, BASE_OPTIONS)
+        tree = html.fromstring(page)
 
-        body = tree.cssselect("body")[0]
-        head = tree.cssselect("head")[0]
+        head = tree.xpath("/html/head")[0]
+        for node in head.iterdescendants():
+            if node.text is None:
+                node.text = ''
 
+        body = tree.xpath("/html/body")[0]
+        for node in body.iterdescendants():
+            if node.text is None:
+                node.text = ''
+        
         responses = self.service.translate(self.model, bergamot.VectorString([convert(head), convert(body)]), options)
-        return self.postprocess(responses)
+        return self.postprocess(etree.tostring(head).decode("utf-8"), responses)
 
-    def postprocess(self, responses):
+    def postprocess(self, original_head, responses):
         head, body = responses
-        embed = '<html> {} {} </html>'.format(head.target.text, body.target.text)
+        embed = '<html> {}  {} </html>'.format(original_head, body.target.text)
         document, errors = tidylib.tidy_document(embed, BASE_OPTIONS)
         return document
