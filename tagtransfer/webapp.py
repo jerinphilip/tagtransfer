@@ -2,8 +2,9 @@ from flask import Flask
 from flask import request
 from lxml import html, etree
 import requests
-from .html_translator import HTMLTranslator
+from .html_translator import HTMLTranslator, BASE_OPTIONS
 import argparse
+import tidylib
 
 app = Flask(__name__)
 translator = None
@@ -16,7 +17,8 @@ def hello_world():
     tree = html.fromstring(document)
     head = tree.xpath('/html/head')[0]
     head.insert(1, html.fragment_fromstring('<base href="{}" target="_blank">'.format(url)))
-    return etree.tostring(tree)
+    document, errors = tidylib.tidy_document(etree.tostring(tree).decode("utf-8"), BASE_OPTIONS)
+    return document
 
 
 if __name__ == "__main__":

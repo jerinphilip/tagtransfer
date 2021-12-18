@@ -9,7 +9,7 @@ BASE_OPTIONS = {
   "tidy-mark": 0,        # No tidy meta tag in output
   "wrap": 0,             # No wrapping
   "alt-text": "",        # Help ensure validation
-  "doctype": 'strict',   # Little sense in transitional for tool-generated markup...
+  "doctype": 'html5',   # Little sense in transitional for tool-generated markup...
   "force-output": 1,     # May not get what you expect but you will get something
   "output-html": 1,
 }
@@ -55,12 +55,23 @@ class HTMLTranslator:
         for node in body.iterdescendants():
             if node.text is None:
                 node.text = ''
+
+        imgs = tree.xpath("/html//img")
+        print("Images to begin with", len(imgs))
+
+        node = html.fromstring(convert(body))
+        imgs = node.xpath("//img")
+        print("Images passed through tidy", len(imgs))
+
         
         responses = self.service.translate(self.model, bergamot.VectorString([convert(head), convert(body)]), options)
         return self.postprocess(etree.tostring(head).decode("utf-8"), responses)
 
     def postprocess(self, original_head, responses):
         head, body = responses
+        node = html.fromstring(body.target.text)
+        imgs = node.xpath("//img")
+        print("Images at translated", len(imgs))
         embed = '<html> {}  {} </html>'.format(original_head, body.target.text)
         document, errors = tidylib.tidy_document(embed, BASE_OPTIONS)
         return document
