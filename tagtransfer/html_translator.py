@@ -16,7 +16,13 @@ BASE_OPTIONS = {
   "drop-empty-paras": 0,
 }
 
+class FakeAnnotatedText:
+    def __init__(self, text):
+        self.text = text
 
+class FakeResponse:
+    def __init__(self, text):
+        self.target = FakeAnnotatedText(text)
 
 def convert(node):
     render = etree.tostring(node).decode("utf-8")
@@ -37,7 +43,7 @@ class HTMLTranslator:
         self.model = self.service.modelFromConfigPath(model_config)
 
 
-    def translate(self, page: str):
+    def translate(self, page: str, bypass: bool = False):
         # Hardcode a bunch of options for now. TODO: improve
         options = ResponseOptions();
         options.alignment = True
@@ -65,10 +71,13 @@ class HTMLTranslator:
         imgs = node.xpath("//img")
         print("Images passed through tidy", len(imgs))
 
+        if bypass:
+            response = FakeResponse(convert(body))
+            return self.postprocess(etree.tostring(head).decode("utf-8"), [None, response])
+        else:
+            responses = self.service.translate(self.model, bergamot.VectorString([convert(head), convert(body)]), options)
+            return self.postprocess(etree.tostring(head).decode("utf-8"), responses)
         
-        responses = self.service.translate(self.model, bergamot.VectorString([convert(head), convert(body)]), options)
-        return self.postprocess(etree.tostring(head).decode("utf-8"), responses)
-
     def postprocess(self, original_head, responses):
         head, body = responses
         node = html.fromstring(body.target.text)
