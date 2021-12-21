@@ -12,6 +12,8 @@ BASE_OPTIONS = {
   "doctype": 'html5',   # Little sense in transitional for tool-generated markup...
   "force-output": 1,     # May not get what you expect but you will get something
   "output-html": 1,
+  "drop-empty-elements": 0,
+  "drop-empty-paras": 0,
 }
 
 
