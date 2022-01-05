@@ -86,9 +86,7 @@ To start the web-service locally:
 
 ```
 python3 -m pip install requirements.txt # (Installs flask, lxml, requests etc)
-python3 -m tagtransfer.webapp \
-	 --model-config ~/.local/share/lemonade/models/en-de-tiny/config.bergamot.yml \
-	 --num-workers 4
+python3 -m tagtransfer.webapp --num-workers 4
 ``` 
 
 
