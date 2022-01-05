@@ -35,7 +35,6 @@ takes advantage of vector-instructions to speed up translations.
 ```bash
 # clone
 git clone https://github.com/jerinphilip/lemonade
-git checkout html-exps
 
 # Setup venv
 python3 -m venv env
