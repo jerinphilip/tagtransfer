@@ -4,9 +4,8 @@
 This repository uses
 [bergamot-translator](https://github.com/browsermt/bergamot-translator), and
 pybindings currently provisioned in
-[lemonade](https://github.com/jerinphilip/lemonade/pull/13/) to test and
-evaluate the HTML
-translation functionality, where-in
+[lemonade](https://github.com/jerinphilip/lemonade) to test and
+evaluate the HTML translation functionality, where-in
 the tags in source-text are transferred to a translated target sentence.
 
 
@@ -22,8 +21,8 @@ bash scripts/download-data.sh ./
 ```
 
 Next, build bergamot python module with bindings to the C++ library from
-[lemonade/pull#13](https://github.com/jerinphilip/lemonade/pull/13/). The
-library has to be built due to `-march=native` being present in builds, which
+[lemonade](https://github.com/jerinphilip/lemonade). The library has to be
+built due to `-march=native` being present in builds, which
 takes advantage of vector-instructions to speed up translations.
 
 ```bash
@@ -55,8 +54,8 @@ python3 -m tagtransfer.main \
 To download the model and configuration mentioned above, you may use the package-manager in bergamot python module.
 
 ```bash
-$ python3 -m bergamot.pkgmgr fetch # fetches available models
-$ python3 -m bergamot.pkgmgr ls
+$ bergamot download # fetches available models
+$ bergamot ls
 
 The following models are available:
 
@@ -110,10 +109,4 @@ Without tags:  BLEU = 48.99 71.1/56.8/41.7/34.3 (BP = 1.000 ratio = 1.152 hyp_le
 Matches perfectly?  Yes
 ```
 
-
-## TODO
-
-- [ ] Crawl web and test on random HTML segments.
-- [ ] Evaluation methodology to compare multiple HTML tag-transfer methods following [Automatic Bilingual Markup Transfer](https://aclanthology.org/2021.findings-emnlp.299.pdf).
-- [ ] Simplify instructions to run code in this repository.
 
