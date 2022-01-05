@@ -26,9 +26,6 @@ class HTMLTranslator:
 
         # Get nodes. Replace them in place.
         tree = html.fromstring(page)
-        for node in tree.iterdescendants():
-            if node.text is None:
-                node.text = ""
 
         if bypass:
             return self.postprocess(convert(tree))
