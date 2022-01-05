@@ -4,16 +4,21 @@
 This repository uses
 [bergamot-translator](https://github.com/browsermt/bergamot-translator), and
 pybindings currently provisioned in
-[lemonade](https://github.com/jerinphilip/lemonade) to experiement with the HTML translation functionality where-in
-the tags in source-text are transferred to a translated target sentence.
+[lemonade](https://github.com/jerinphilip/lemonade) to experiement with the
+HTML translation functionality where-in the tags in source-text are transferred
+to a translated target sentence.
 
 Currently this repository houses:
 
-1. Minimal setup for evaluating HTML using [salesforce/localization-xml-mt](https://github.com/salesforce/localization-xml-mt). For more information
-2. A Web Service that allows rendering translated HTML by supplying only the source-url to inspect visually how well the HTML is being translated. 
+1. Minimal setup for evaluating HTML using
+   [salesforce/localization-xml-mt](https://github.com/salesforce/localization-xml-mt).
+   For more information
+2. A Web Service that allows rendering translated HTML by supplying only the
+   source-url to inspect visually how well the HTML is being translated. 
 
 
-For a visual sample of how good the render of the translated page is checkout [The Hindu](https://www.thehindu.com/) translated to German from English below:
+For a visual sample of how good the render of the translated page is checkout
+[The Hindu](https://www.thehindu.com/) translated to German from English below:
 
 <img width="720" alt="image" src="https://user-images.githubusercontent.com/727292/148254241-d658706f-b99a-4b65-a422-a9d336a550a0.png">
 
@@ -42,7 +47,10 @@ python3 setup.py bdist_wheel
 python3 -m pip install dist/bergamot-*.whl # Install the wheel file into virtual environment.
 ```
 
-To download the model and associated configuration files required to run applications in this repository, you may use the package-manager in bergamot python module.
+To download the models and associated configuration files required to run
+applications in this repository, you may use the package-manager in bergamot
+python module.
+
 
 ```bash
 $ bergamot download # fetches available models
@@ -70,7 +78,10 @@ The following models are available:
 
 ### Launching HTML translation service
 
-The HTML rendering is through a python script which launches a local-server. The local-server takes the page, translates and renders via flask the translated web-page. There are some adjustments to get the links correct so resources (css, images) load and page-flow is not affected.
+The HTML rendering is through a python script which launches a local-server.
+The local-server takes the page, translates and renders via flask the
+translated web-page. There are some adjustments to get the links correct so
+resources (css, images) load and page-flow is not affected.
 
 To start the web-service locally:
 
@@ -95,7 +106,6 @@ bash scripts/download-data.sh ./
 ```
 
 
-
 To run the existing script, which simply translates the xml-marked-up
 translation dataset, please use the following command:
 
@@ -105,7 +115,6 @@ python3 -m tagtransfer.main \
    --target-data localization-xml-mt-master/data/ende/ende_de_dev.json \
    --model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
 ```
-
 
 If all works well, the output looks something like the following:
 
