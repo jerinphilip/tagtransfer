@@ -36,5 +36,4 @@ class HTMLTranslator:
             return self.postprocess(response.target.text)
 
     def postprocess(self, text):
-        node = html.fromstring(text)
-        return response.target.text
+        return text
