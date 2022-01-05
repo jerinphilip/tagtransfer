@@ -10,7 +10,7 @@ name: "Python Style"
 
 jobs:
     python-ubuntu:
-      name: "ubuntu pybindings"
+      name: "Black formatter"
       runs-on: "ubuntu-latest"
       steps:
       - name: Checkout
