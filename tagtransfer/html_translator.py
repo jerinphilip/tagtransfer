@@ -4,16 +4,6 @@ import cssselect
 from lxml import html, etree
 
 
-class FakeAnnotatedText:
-    def __init__(self, text):
-        self.text = text
-
-
-class FakeResponse:
-    def __init__(self, text):
-        self.target = FakeAnnotatedText(text)
-
-
 def convert(node):
     return etree.tostring(node, method="html", encoding="utf-8").decode("utf-8")
 
@@ -47,16 +37,15 @@ class HTMLTranslator:
         print("Images to begin with", len(imgs))
 
         if bypass:
-            response = FakeResponse(convert(tree))
-            return self.postprocess(response)
+            return self.postprocess(convert(tree))
         else:
             [response] = self.service.translate(
                 self.model, bergamot.VectorString([convert(tree)]), options
             )
-            return self.postprocess(response)
+            return self.postprocess(response.target.text)
 
-    def postprocess(self, response):
-        node = html.fromstring(response.target.text)
+    def postprocess(self, text):
+        node = html.fromstring(text)
         imgs = node.xpath("//img")
         print("Images at translated", len(imgs))
         return response.target.text
