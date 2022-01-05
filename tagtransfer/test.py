@@ -9,15 +9,14 @@ import bergamot
 from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = ServiceConfig()
-    config.numWorkers = 4;
-    config.cacheSize = 2000;
-    config.cacheMutexBuckets = 18;
-    service = Service(config);
+    config.numWorkers = 4
+    config.cacheSize = 2000
+    config.cacheMutexBuckets = 18
+    service = Service(config)
 
-    options = ResponseOptions();
+    options = ResponseOptions()
     options.alignment = True
     options.qualityScores = True
     options.HTML = True
@@ -32,11 +31,10 @@ if __name__ == '__main__':
             samples = bergamot.VectorString([example["input"]])
             responses = service.translate(model, samples, options)
             response = responses[0]
-            print('[src] > ', response.source.text)
-            print('[hyp] > ', response.target.text)
-            print('[tgt] > ', example["expectedProjectedString"])
+            print("[src] > ", response.source.text)
+            print("[hyp] > ", response.target.text)
+            print("[tgt] > ", example["expectedProjectedString"])
             print()
         except:
             print("Failure on: ", example["input"], file=sys.stderr)
             pass
-
