@@ -4,26 +4,32 @@
 This repository uses
 [bergamot-translator](https://github.com/browsermt/bergamot-translator), and
 pybindings currently provisioned in
-[lemonade](https://github.com/jerinphilip/lemonade/pull/13/) to test and
-evaluate the HTML
-translation functionality, where-in
-the tags in source-text are transferred to a translated target sentence.
+[lemonade](https://github.com/jerinphilip/lemonade) to experiement with the
+HTML translation functionality where-in the tags in source-text are transferred
+to a translated target sentence.
+
+Currently this repository houses:
+
+1. Minimal setup for evaluating HTML using
+   [salesforce/localization-xml-mt](https://github.com/salesforce/localization-xml-mt).
+   For more information
+2. A Web Service that allows rendering translated HTML by supplying only the
+   source-url to inspect visually how well the HTML is being translated. 
+
+
+For a visual sample of how good the render of the translated page is checkout
+[The Hindu](https://www.thehindu.com/) translated to German from English below:
+
+<img width="720" alt="image" src="https://user-images.githubusercontent.com/727292/148254241-d658706f-b99a-4b65-a422-a9d336a550a0.png">
 
 
 ## Instructions to setup
 
+### Python-bindings via lemonade
 
-First download an XML marked-up dataset from
-[salesforce/localization-xml-mt](https://github.com/salesforce/localization-xml-mt).
-This can be done by using:
-
-```
-bash scripts/download-data.sh ./
-```
-
-Next, build bergamot python module with bindings to the C++ library from
-[lemonade/pull#13](https://github.com/jerinphilip/lemonade/pull/13/). The
-library has to be built due to `-march=native` being present in builds, which
+Build bergamot python module with bindings to the C++ library from
+[lemonade](https://github.com/jerinphilip/lemonade). The library has to be
+built due to `-march=native` being present in builds, which
 takes advantage of vector-instructions to speed up translations.
 
 ```bash
@@ -41,22 +47,14 @@ python3 setup.py bdist_wheel
 python3 -m pip install dist/bergamot-*.whl # Install the wheel file into virtual environment.
 ```
 
+To download the models and associated configuration files required to run
+applications in this repository, you may use the package-manager in bergamot
+python module.
 
-To run the existing script, which simply translates the xml-marked-up
-translation dataset, please use the following command:
-
-```
-python3 -m tagtransfer.main \
-   --source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
-   --target-data localization-xml-mt-master/data/ende/ende_de_dev.json \
-   --model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
-```
-
-To download the model and configuration mentioned above, you may use the package-manager in bergamot python module.
 
 ```bash
-$ python3 -m bergamot.pkgmgr fetch # fetches available models
-$ python3 -m bergamot.pkgmgr ls
+$ bergamot download # fetches available models
+$ bergamot ls
 
 The following models are available:
 
@@ -76,6 +74,46 @@ The following models are available:
    14. de-en-base German-English base
    15. de-en-tiny German-English tiny
 
+```
+
+### Launching HTML translation service
+
+The HTML rendering is through a python script which launches a local-server.
+The local-server takes the page, translates and renders via flask the
+translated web-page. There are some adjustments to get the links correct so
+resources (css, images) load and page-flow is not affected.
+
+To start the web-service locally:
+
+```
+python3 -m pip install requirements.txt # (Installs flask, lxml, requests etc)
+python3 -m tagtransfer.webapp \
+	 --model-config ~/.local/share/lemonade/models/en-de-tiny/config.bergamot.yml \
+	 --num-workers 4
+``` 
+
+
+### Evaluating markup via xml-localization-dataset
+
+(This is still in early stages)
+
+First download an XML marked-up dataset from
+[salesforce/localization-xml-mt](https://github.com/salesforce/localization-xml-mt).
+This can be done by using:
+
+```
+bash scripts/download-data.sh ./
+```
+
+
+To run the existing script, which simply translates the xml-marked-up
+translation dataset, please use the following command:
+
+```
+python3 -m tagtransfer.main \
+   --source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
+   --target-data localization-xml-mt-master/data/ende/ende_de_dev.json \
+   --model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
 ```
 
 If all works well, the output looks something like the following:
@@ -110,10 +148,4 @@ Without tags:  BLEU = 48.99 71.1/56.8/41.7/34.3 (BP = 1.000 ratio = 1.152 hyp_le
 Matches perfectly?  Yes
 ```
 
-
-## TODO
-
-- [ ] Crawl web and test on random HTML segments.
-- [ ] Evaluation methodology to compare multiple HTML tag-transfer methods following [Automatic Bilingual Markup Transfer](https://aclanthology.org/2021.findings-emnlp.299.pdf).
-- [ ] Simplify instructions to run code in this repository.
 
