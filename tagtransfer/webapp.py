@@ -12,12 +12,7 @@ app = Flask(__name__)
 translator = None
 
 
-@app.route("/")
-def index():
-    url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
-    bypass = request.args.get("bypass", "false") == "true"
-    model1 = request.args.get("model", "en-de-tiny")
-    model2 = request.args.get("pivot", None)
+def intercept(url):
     response = requests.get(
         url,
         headers={
@@ -37,13 +32,26 @@ def index():
         1, html.fragment_fromstring('<base href="{}" target="_blank">'.format(url))
     )
 
+    return etree.tostring(
+        tree, method="html", pretty_print=True, encoding="utf-8"
+    ).decode()
+
+
+@app.route("/")
+def index():
+    url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
+    bypass = request.args.get("bypass", "false") == "true"
+    model1 = request.args.get("model", "en-de-tiny")
+    model2 = request.args.get("pivot", None)
+
+    # Intercept the URL to obtain source and show translation
+    document = intercept(url)
+
     # Translate document HTML
     translated = translator.translate(
         model1,
         model2,
-        etree.tostring(
-            tree, method="html", pretty_print=True, encoding="utf-8"
-        ).decode(),
+        document,
         bypass,
     )
 
