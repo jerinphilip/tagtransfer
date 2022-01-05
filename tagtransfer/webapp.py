@@ -16,6 +16,8 @@ translator = None
 def index():
     url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
     bypass = request.args.get("bypass", "false") == "true"
+    model1 = request.args.get("model", "en-de-tiny")
+    model2 = request.args.get("pivot", None)
     response = requests.get(
         url,
         headers={
@@ -37,6 +39,8 @@ def index():
 
     # Translate document HTML
     translated = translator.translate(
+        model1,
+        model2,
         etree.tostring(
             tree, method="html", pretty_print=True, encoding="utf-8"
         ).decode(),
@@ -49,12 +53,6 @@ def index():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model-config",
-        type=str,
-        help="Path to model file to use in tag-transfer translation",
-        required=True,
-    )
-    parser.add_argument(
         "--num-workers",
         type=int,
         help="Number of worker threads to use to translate",
@@ -66,16 +64,7 @@ if __name__ == "__main__":
         help="How many sentences to hold in cache",
         default=2000,
     )
-    parser.add_argument(
-        "--cache-mutex-buckets",
-        type=int,
-        help="How many mutex buckets to use to reduce contention in cache among workers.",
-        default=20,
-    )
 
     args = parser.parse_args()
-    translator = HTMLTranslator(
-        args.model_config, args.num_workers, args.cache_size, args.cache_mutex_buckets
-    )
-
+    translator = HTMLTranslator(args.num_workers, args.cache_size)
     app.run("0.0.0.0", "8080")
