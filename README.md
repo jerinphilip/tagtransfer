@@ -4,7 +4,7 @@
 This repository uses
 [bergamot-translator](https://github.com/browsermt/bergamot-translator), and
 pybindings currently provisioned in
-[lemonade](https://github.com/jerinphilip/lemonade) to experiement with the
+[lemonade](https://github.com/jerinphilip/lemonade) to experiment with the
 HTML translation functionality where-in the tags in source-text are transferred
 to a translated target sentence.
 
