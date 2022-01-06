@@ -8,6 +8,7 @@ import typing as t
 
 import bergamot
 from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+from bergamot.config import repository
 
 SACREBLEU_METRIC = "bleu"
 
@@ -160,9 +161,9 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
-        "--model-config",
+        "--model-code",
         type=str,
-        help="Path to model file to use in tag-transfer translation",
+        help="Model code from bergamot ls",
         required=True,
     )
     parser.add_argument(
@@ -208,7 +209,8 @@ if __name__ == "__main__":
     service = Service(config)
 
     # What model are we using?
-    model = service.modelFromConfigPath(args.model_config)
+    modelConfigPath = repository.modelConfigPath(args.model_code)
+    model = service.modelFromConfigPath(modelConfigPath)
 
     # Hardcode a bunch of options for now. TODO: improve
     options = ResponseOptions()
