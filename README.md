@@ -107,10 +107,10 @@ To run the existing script, which simply translates the xml-marked-up
 translation dataset, please use the following command:
 
 ```
-python3 -m tagtransfer.main \
+python3 -m tagtransfer.xml_eval 				       \
+   --model-code en-de-tiny 					       \
    --source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
-   --target-data localization-xml-mt-master/data/ende/ende_de_dev.json \
-   --model-config ~/.local/share/lemonade/models/ende.student.tiny11/config.bergamot.yml
+   --target-data localization-xml-mt-master/data/ende/ende_de_dev.json 
 ```
 
 If all works well, the output looks something like the following:
