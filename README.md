@@ -27,6 +27,8 @@ For a visual sample of how good the render of the translated page is checkout
 
 ### Python-bindings via lemonade
 
+*Note*: The following is no longer necessary after additions to `requirements.txt`.
+
 Build bergamot python module with bindings to the C++ library from
 [lemonade](https://github.com/jerinphilip/lemonade). The library has to be
 built due to `-march=native` being present in builds, which
@@ -85,7 +87,11 @@ resources (css, images) load and page-flow is not affected.
 To start the web-service locally:
 
 ```
-python3 -m pip install requirements.txt # (Installs flask, lxml, requests etc)
+# (Installs flask, lxml, requests etc and lemonade)
+# (Lemonade installation can take some time on consumer-grade machines)
+python3 -m pip install requirements.txt 
+
+# To run
 python3 -m tagtransfer.webapp --num-workers 4
 ``` 
 
