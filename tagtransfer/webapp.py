@@ -23,7 +23,6 @@ def index():
 
     base_url = request.base_url
 
-    # I only need minimum clickable links transferred
     def transform_url(u):
         u = urllib.parse.urljoin(url, u)
         params = {
@@ -38,14 +37,16 @@ def index():
         paramstring = urllib.parse.urlencode(params)
         return f"{base_url}/?{paramstring}"
 
+    # I only need minimum clickable links transferred, so going for <a>.
+    # <button> etc are ignored.
     tree = html.fromstring(translated)
     anchors = tree.xpath("//a")
     for anchor in anchors:
         href = anchor.attrib.get("href", None)
         if href:
             if href[0] == "#":
-                print(href)
-
+                # This block circumvent base href prepending urls affecting
+                # in-page navigation by means of javascript.
                 anchor.attrib["href"] = "javascript:;"
                 anchor.attrib["onclick"] = "document.location.hash='{}'".format(
                     href.lstrip("#")
