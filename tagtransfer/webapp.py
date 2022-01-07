@@ -43,7 +43,15 @@ def index():
     for anchor in anchors:
         href = anchor.attrib.get("href", None)
         if href:
-            anchor.attrib["href"] = transform_url(href)
+            if href[0] == "#":
+                print(href)
+
+                anchor.attrib["href"] = "javascript:;"
+                anchor.attrib["onclick"] = "document.location.hash='{}'".format(
+                    href.lstrip("#")
+                )
+            else:
+                anchor.attrib["href"] = transform_url(href)
 
     return etree.tostring(tree, method="html", encoding="utf-8").decode("utf-8")
 
