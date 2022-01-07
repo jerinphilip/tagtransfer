@@ -71,6 +71,8 @@ if __name__ == "__main__":
         default=2000,
     )
 
+    parser.add_argument("--port", type=int, help="Port to run server on", default=8080)
+
     args = parser.parse_args()
     translator = HTMLTranslator(args.num_workers, args.cache_size)
-    app.run("0.0.0.0", "8080", debug=True)
+    app.run("0.0.0.0", args.port, debug=True)
