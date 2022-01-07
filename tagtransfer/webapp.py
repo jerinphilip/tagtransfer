@@ -4,6 +4,7 @@ from lxml import html, etree
 import requests
 from .html_translator import HTMLTranslator
 import argparse
+import urllib
 
 # from html import unescape
 # import re
@@ -18,7 +19,42 @@ def index():
     bypass = request.args.get("bypass", "false") == "true"
     model1 = request.args.get("model", "en-de-tiny")
     model2 = request.args.get("pivot", None)
-    return translator.translate_url(model1, model2, url, bypass)
+    translated = translator.translate_url(model1, model2, url, bypass)
+
+    base_url = request.base_url
+
+    def transform_url(u):
+        u = urllib.parse.urljoin(url, u)
+        params = {
+            "url": u,
+            "model": model1,
+            "bypass": bypass,
+        }
+
+        if model2 is not None:
+            params["pivot"] = model2
+
+        paramstring = urllib.parse.urlencode(params)
+        return f"{base_url}/?{paramstring}"
+
+    # I only need minimum clickable links transferred, so going for <a>.
+    # <button> etc are ignored.
+    tree = html.fromstring(translated)
+    anchors = tree.xpath("//a")
+    for anchor in anchors:
+        href = anchor.attrib.get("href", None)
+        if href:
+            if href[0] == "#":
+                # This block circumvent base href prepending urls affecting
+                # in-page navigation by means of javascript.
+                anchor.attrib["href"] = "javascript:;"
+                anchor.attrib["onclick"] = "document.location.hash='{}'".format(
+                    href.lstrip("#")
+                )
+            else:
+                anchor.attrib["href"] = transform_url(href)
+
+    return etree.tostring(tree, method="html", encoding="utf-8").decode("utf-8")
 
 
 if __name__ == "__main__":
@@ -36,6 +72,8 @@ if __name__ == "__main__":
         default=2000,
     )
 
+    parser.add_argument("--port", type=int, help="Port to run server on", default=8080)
+
     args = parser.parse_args()
     translator = HTMLTranslator(args.num_workers, args.cache_size)
-    app.run("0.0.0.0", "8080")
+    app.run("0.0.0.0", args.port, debug=True)

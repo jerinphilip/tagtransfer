@@ -80,7 +80,7 @@ class HTMLTranslator:
         tree = html.fromstring(document)
         head = tree.xpath("/html/head")[0]
         head.insert(
-            1, html.fragment_fromstring('<base href="{}" target="_blank">'.format(url))
+            1, html.fragment_fromstring('<base href="{}" target="_parent">'.format(url))
         )
 
         return etree.tostring(
