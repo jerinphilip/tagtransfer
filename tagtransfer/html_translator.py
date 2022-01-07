@@ -5,24 +5,10 @@ from lxml import html, etree
 from bergamot.config import repository
 import typing as t
 import requests
-import tidylib
 
 
 def convert(node):
     return etree.tostring(node, method="html", encoding="utf-8").decode("utf-8")
-
-
-BASE_OPTIONS = {
-    "indent": 1,  # Pretty; not too much of a performance hit
-    "tidy-mark": 0,  # No tidy meta tag in output
-    "wrap": 0,  # No wrapping
-    "alt-text": "",  # Help ensure validation
-    "doctype": "html5",  # Little sense in transitional for tool-generated markup...
-    "force-output": 1,  # May not get what you expect but you will get something
-    "output-html": 1,
-    "drop-empty-elements": 0,
-    "drop-empty-paras": 0,
-}
 
 
 class HTMLTranslator:
@@ -45,12 +31,6 @@ class HTMLTranslator:
         options = ResponseOptions(HTML=True)
 
         # Get nodes. Replace them in place.
-        def tidy(tree):
-            page = convert(tree)
-            tidypage, errors = tidylib.tidy_document(page, BASE_OPTIONS)
-            modtree = html.fromstring(tidypage)
-            return convert(modtree)
-
         tree = html.fromstring(page)
 
         if bypass:
@@ -63,17 +43,13 @@ class HTMLTranslator:
                 [response] = self.service.pivot(
                     source_to_pivot_model,
                     pivot_to_target_model,
-                    # bergamot.VectorString([convert(tree)]),
-                    bergamot.VectorString([tidy(tree)]),
+                    bergamot.VectorString([convert(tree)]),
                     options,
                 )
             else:
                 forward_model = self.get_model(model)
                 [response] = self.service.translate(
-                    forward_model,
-                    # bergamot.VectorString([convert(tree)]),
-                    bergamot.VectorString([tidy(tree)]),
-                    options,
+                    forward_model, bergamot.VectorString([convert(tree)]), options
                 )
 
             return self.postprocess(response.target.text)

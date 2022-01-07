@@ -29,7 +29,7 @@ def index():
         params = {
             "url": u,
             "model": model1,
-            "bypass": str(bypass).lower(),
+            "bypass": bypass,
         }
 
         if model2 is not None:
