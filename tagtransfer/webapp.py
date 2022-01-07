@@ -25,6 +25,7 @@ def index():
 
     # I only need minimum clickable links transferred
     def transform_url(u):
+        u = urllib.parse.urljoin(url, u)
         params = {
             "url": u,
             "model": model1,
