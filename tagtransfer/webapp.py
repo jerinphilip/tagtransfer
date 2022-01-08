@@ -2,9 +2,10 @@ from flask import Flask
 from flask import request
 from lxml import html, etree
 import requests
-from .html_translator import HTMLTranslator
+from .html_translator import HTMLTranslator, make_soup, soup_to_html5_strict
 import argparse
 import urllib
+import tidylib
 
 # from html import unescape
 # import re
@@ -40,22 +41,19 @@ def index():
 
     # I only need minimum clickable links transferred, so going for <a>.
     # <button> etc are ignored.
-    tree = html.fromstring(translated)
-    anchors = tree.xpath("//a")
-    for anchor in anchors:
-        href = anchor.attrib.get("href", None)
+    soup = make_soup(translated)
+    for a in soup.find_all("a"):
+        href = a.get("href", False)
         if href:
             if href[0] == "#":
                 # This block circumvent base href prepending urls affecting
                 # in-page navigation by means of javascript.
-                anchor.attrib["href"] = "javascript:;"
-                anchor.attrib["onclick"] = "document.location.hash='{}'".format(
-                    href.lstrip("#")
-                )
+                a["href"] = "javascript:;"
+                a["onclick"] = "document.location.hash='{}'".format(href.lstrip("#"))
             else:
-                anchor.attrib["href"] = transform_url(href)
+                a["href"] = transform_url(href)
 
-    return etree.tostring(tree, method="html", encoding="utf-8").decode("utf-8")
+    return soup_to_html5_strict(soup)
 
 
 if __name__ == "__main__":

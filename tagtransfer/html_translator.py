@@ -2,17 +2,13 @@ import bergamot
 from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
 import cssselect
 from lxml import html, etree
+from bs4 import BeautifulSoup
 from bergamot.config import repository
 import typing as t
 import requests
 import tidylib
 
-
-def convert(node):
-    return etree.tostring(node, method="html", encoding="utf-8").decode("utf-8")
-
-
-BASE_OPTIONS = {
+TIDY_PRESETS = {
     "indent": 1,  # Pretty; not too much of a performance hit
     "tidy-mark": 0,  # No tidy meta tag in output
     "wrap": 0,  # No wrapping
@@ -22,11 +18,20 @@ BASE_OPTIONS = {
     "output-html": 1,
     "drop-empty-elements": 0,
     "drop-empty-paras": 0,
+    "show-body-only": "auto",
 }
 
 
+def make_soup(markup: str):
+    return BeautifulSoup(markup, "html5lib")
+
+
+def soup_to_html5_strict(soup: BeautifulSoup):
+    return soup.prettify(formatter="html5")
+
+
 class HTMLTranslator:
-    def __init__(self, num_workers, cache_size):
+    def __init__(self, num_workers, cache_size, use_tidy=True):
         config = ServiceConfig(
             numWorkers=num_workers,
             cacheSize=cache_size,
@@ -38,56 +43,45 @@ class HTMLTranslator:
         # What model are we using?
 
         self.cache = {}
+        self.use_tidy = use_tidy
+
+    def intercept(self, url):
+        soup = self._intercept(url)
+        return soup_to_html5_strict(soup)
+
+    def translate_url(self, model1: str, model2: str, url: str, bypass: bool = False):
+        # Intercept the URL to obtain source and show translation
+        soup = self._intercept(url)
+
+        # Translate document HTML
+        translated = self._translate(
+            model1,
+            model2,
+            soup,
+            bypass,
+        )
+
+        return str(translated)
 
     def translate(
         self, model: str, pivot: t.Union[str, None], page: str, bypass: bool = False
     ):
-        options = ResponseOptions(HTML=True)
+        soup = make_soup(page)
+        translated_soup = self._translate(model, pivot, soup, bypass)
+        return str(translated_soup)
 
-        # Get nodes. Replace them in place.
-        def tidy(tree):
-            page = convert(tree)
-            tidypage, errors = tidylib.tidy_document(page, BASE_OPTIONS)
-            modtree = html.fromstring(tidypage)
-            return convert(modtree)
-
-        tree = html.fromstring(page)
-
-        if bypass:
-            return self.postprocess(convert(tree))
-        else:
-            response = None
-            if pivot is not None:
-                source_to_pivot_model = self.get_model(model)
-                pivot_to_target_model = self.get_model(pivot)
-                [response] = self.service.pivot(
-                    source_to_pivot_model,
-                    pivot_to_target_model,
-                    # bergamot.VectorString([convert(tree)]),
-                    bergamot.VectorString([tidy(tree)]),
-                    options,
-                )
-            else:
-                forward_model = self.get_model(model)
-                [response] = self.service.translate(
-                    forward_model,
-                    # bergamot.VectorString([convert(tree)]),
-                    bergamot.VectorString([tidy(tree)]),
-                    options,
-                )
-
-            return self.postprocess(response.target.text)
-
-    def get_model(self, code):
+    def _get_model(self, code):
         if code not in self.cache:
             config = repository.modelConfigPath(code)
             self.cache[code] = self.service.modelFromConfigPath(config)
         return self.cache[code]
 
-    def postprocess(self, text):
-        return text
+    def _postprocess(self, soup, translated_body):
+        translated_body = make_soup(translated_body)
+        soup.body.replace_with(translated_body)
+        return soup
 
-    def intercept(self, url):
+    def _intercept(self, url):
         response = requests.get(
             url,
             headers={
@@ -101,26 +95,39 @@ class HTMLTranslator:
         # document = re.sub(r"&#\d+;", lambda match: unescape(match[0]), document)
 
         # Add <base href=""> to <head>
-        tree = html.fromstring(document)
-        head = tree.xpath("/html/head")[0]
-        head.insert(
-            1, html.fragment_fromstring('<base href="{}" target="_parent">'.format(url))
-        )
+        soup = make_soup(document)
+        base_href = soup.new_tag("base", href=url, target="_parent")
+        soup.head.insert(1, base_href)
+        return soup
 
-        return etree.tostring(
-            tree, method="html", pretty_print=True, encoding="utf-8"
-        ).decode()
+    def _translate(
+        self,
+        model: str,
+        pivot: t.Union[str, None],
+        soup: BeautifulSoup,
+        bypass: bool = False,
+    ):
+        options = ResponseOptions(HTML=True)
 
-    def translate_url(self, model1: str, model2: str, url: str, bypass: bool = False):
-        # Intercept the URL to obtain source and show translation
-        document = self.intercept(url)
+        if bypass:
+            return soup
+        else:
+            response = None
+            if pivot is not None:
+                source_to_pivot_model = self._get_model(model)
+                pivot_to_target_model = self._get_model(pivot)
+                [response] = self.service.pivot(
+                    source_to_pivot_model,
+                    pivot_to_target_model,
+                    bergamot.VectorString([soup_to_html5_strict(soup.body)]),
+                    options,
+                )
+            else:
+                forward_model = self._get_model(model)
+                [response] = self.service.translate(
+                    forward_model,
+                    bergamot.VectorString([soup_to_html5_strict(soup.body)]),
+                    options,
+                )
 
-        # Translate document HTML
-        translated = self.translate(
-            model1,
-            model2,
-            document,
-            bypass,
-        )
-
-        return f"<!DOCTYPE html>\n{translated}"
+            return self._postprocess(soup, translated_body=response.target.text)
