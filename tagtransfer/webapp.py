@@ -40,7 +40,7 @@ def index():
         if model2 is not None:
             params["pivot"] = model2
 
-        paramstring = urllib.parse.urlencode(params)
+        paramstring = urllib.parse.urlencode(params, safe="/:")
         return f"{base_url}/?{paramstring}"
 
     # I only need minimum clickable links transferred, so going for <a>.
