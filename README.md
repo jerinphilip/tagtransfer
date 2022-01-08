@@ -106,7 +106,7 @@ bypass  Easy switch to bypass translation and render the original page, useful
 Model codes can be chosen from those listed above via `bergamot ls`.
 
 Here's an example link:
-* http://localhost:8080/?url=https://www.theguardian.com/uk&model=en-de-tiny&pivot=de-en-tiny&bypass=false
+* http://localhost:8080/?url=https://www.thehindu.com/uk&model=en-de-tiny&pivot=de-en-tiny&bypass=false
 
 Once the app is launched, links are modified to go through the translator again
 so as to conveniently check if translation works in a browsing workflow.
