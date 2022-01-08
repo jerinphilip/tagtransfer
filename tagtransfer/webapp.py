@@ -16,20 +16,20 @@ translator = None
 @app.route("/")
 def index():
     url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
-    bypass = request.args.get("bypass", "false") == "true"
+    bypass = request.args.get("bypass", "false").lower() == "true"
     model1 = request.args.get("model", "en-de-tiny")
     model2 = request.args.get("pivot", None)
     translated = translator.translate_url(model1, model2, url, bypass)
 
     base_url = request.base_url
 
-    # I only need minimum clickable links transferred
     def transform_url(u):
         u = urllib.parse.urljoin(url, u)
         params = {
             "url": u,
             "model": model1,
             "bypass": str(bypass).lower(),
+            "bypass": bypass,
         }
 
         if model2 is not None:
@@ -38,14 +38,16 @@ def index():
         paramstring = urllib.parse.urlencode(params)
         return f"{base_url}/?{paramstring}"
 
+    # I only need minimum clickable links transferred, so going for <a>.
+    # <button> etc are ignored.
     tree = html.fromstring(translated)
     anchors = tree.xpath("//a")
     for anchor in anchors:
         href = anchor.attrib.get("href", None)
         if href:
             if href[0] == "#":
-                print(href)
-
+                # This block circumvent base href prepending urls affecting
+                # in-page navigation by means of javascript.
                 anchor.attrib["href"] = "javascript:;"
                 anchor.attrib["onclick"] = "document.location.hash='{}'".format(
                     href.lstrip("#")
@@ -71,6 +73,8 @@ if __name__ == "__main__":
         default=2000,
     )
 
+    parser.add_argument("--port", type=int, help="Port to run server on", default=8080)
+
     args = parser.parse_args()
     translator = HTMLTranslator(args.num_workers, args.cache_size)
-    app.run("0.0.0.0", "8080", debug=True)
+    app.run("0.0.0.0", args.port, debug=True)
