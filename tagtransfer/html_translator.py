@@ -30,6 +30,15 @@ def soup_to_html5_strict(soup: BeautifulSoup):
     return soup.prettify(formatter="html5")
 
 
+def soup_utf8_tx(soup: BeautifulSoup):
+    text = soup.encode("utf-8", formatter="html5")
+    return text.decode("utf8")
+
+
+def soup_relaxed(soup):
+    return soup.prettify(formatter="minimal")
+
+
 class HTMLTranslator:
     def __init__(self, num_workers, cache_size, use_tidy=True):
         config = ServiceConfig(
@@ -61,14 +70,14 @@ class HTMLTranslator:
             bypass,
         )
 
-        return str(translated)
+        return soup_relaxed(translated)
 
     def translate(
         self, model: str, pivot: t.Union[str, None], page: str, bypass: bool = False
     ):
         soup = make_soup(page)
         translated_soup = self._translate(model, pivot, soup, bypass)
-        return str(translated_soup)
+        return soup_relaxed(translated_soup)
 
     def _get_model(self, code):
         if code not in self.cache:
@@ -119,14 +128,14 @@ class HTMLTranslator:
                 [response] = self.service.pivot(
                     source_to_pivot_model,
                     pivot_to_target_model,
-                    bergamot.VectorString([soup_to_html5_strict(soup.body)]),
+                    bergamot.VectorString([soup_utf8_tx(soup.body)]),
                     options,
                 )
             else:
                 forward_model = self._get_model(model)
                 [response] = self.service.translate(
                     forward_model,
-                    bergamot.VectorString([soup_to_html5_strict(soup.body)]),
+                    bergamot.VectorString([soup_utf8_tx(soup.body)]),
                     options,
                 )
 

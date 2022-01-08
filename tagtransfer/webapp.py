@@ -2,7 +2,11 @@ from flask import Flask
 from flask import request
 from lxml import html, etree
 import requests
-from .html_translator import HTMLTranslator, make_soup, soup_to_html5_strict
+from .html_translator import (
+    HTMLTranslator,
+    make_soup,
+    soup_relaxed,
+)
 import argparse
 import urllib
 import tidylib
@@ -53,7 +57,7 @@ def index():
             else:
                 a["href"] = transform_url(href)
 
-    return soup_to_html5_strict(soup)
+    return soup_relaxed(soup)
 
 
 if __name__ == "__main__":
