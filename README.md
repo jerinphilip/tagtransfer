@@ -12,7 +12,6 @@ Currently this repository houses:
 
 1. Minimal setup for evaluating HTML using
    [salesforce/localization-xml-mt](https://github.com/salesforce/localization-xml-mt).
-   For more information
 2. A Web Service that allows rendering translated HTML by supplying only the
    source-url to inspect visually how well the HTML is being translated. 
 
@@ -26,8 +25,6 @@ For a visual sample of how good the render of the translated page is checkout
 ## Instructions to setup
 
 ### Python-bindings via lemonade
-
-*Note*: The following is no longer necessary after additions to `requirements.txt`.
 
 Build bergamot python module with bindings to the C++ library from
 [lemonade](https://github.com/jerinphilip/lemonade). The library has to be
@@ -88,12 +85,32 @@ To start the web-service locally:
 
 ```
 # (Installs flask, lxml, requests etc and lemonade)
-# (Lemonade installation can take some time on consumer-grade machines)
 python3 -m pip install requirements.txt 
 
 # To run
 python3 -m tagtransfer.webapp --num-workers 4
 ``` 
+
+Assuming the app is launched in `localhost:8080`, which model to choose,
+whether to use an additional model to pivot and the URL to translate is
+controlled by the following `GET` args.
+
+```
+url     url to translate
+model   model-code to use in forward translation
+pivot   model-code to use in pivoting after forward translation. This is optional.
+bypass  Easy switch to bypass translation and render the original page, useful
+        in debugging.
+```
+
+Once the app is launched, links are modified to go through the translator again
+so as to conveniently check if translation works in a browsing workflow.
+
+Known downsides of running through python is sessions and single-page apps
+dependent heavily on JavaScript altering DOM will not work well with this
+mechanism. But from a development perspective, static pages are just as fine
+enough to capture enough HTML that causes issues in the pipeline to propogate a
+fix upstream.
 
 
 ### Evaluating markup via xml-localization-dataset
@@ -113,8 +130,8 @@ To run the existing script, which simply translates the xml-marked-up
 translation dataset, please use the following command:
 
 ```
-python3 -m tagtransfer.xml_eval 				       \
-   --model-code en-de-tiny 					       \
+python3 -m tagtransfer.xml_eval                                        \
+   --model-code en-de-tiny                                             \
    --source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
    --target-data localization-xml-mt-master/data/ende/ende_de_dev.json 
 ```
