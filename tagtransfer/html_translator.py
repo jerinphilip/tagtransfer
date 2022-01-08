@@ -27,16 +27,18 @@ def make_soup(markup: str):
 
 
 def soup_to_html5_strict(soup: BeautifulSoup):
-    return soup.prettify(formatter="html5")
+    text = soup.prettify(formatter="html5")
+    return text
 
 
 def soup_utf8_tx(soup: BeautifulSoup):
-    text = soup.encode("utf-8", formatter="html5")
-    return text.decode("utf8")
+    text = soup.prettify(formatter="html5")
+    return text.replace("&amp;", "&")
 
 
 def soup_relaxed(soup):
-    return soup.prettify(formatter="minimal")
+    text = soup.prettify(formatter="minimal")
+    return text.replace("&amp;", "&")
 
 
 class HTMLTranslator:
