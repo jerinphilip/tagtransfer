@@ -16,7 +16,7 @@ translator = None
 @app.route("/")
 def index():
     url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
-    bypass = request.args.get("bypass", "false") == "true"
+    bypass = request.args.get("bypass", "false").lower() == "true"
     model1 = request.args.get("model", "en-de-tiny")
     model2 = request.args.get("pivot", None)
     translated = translator.translate_url(model1, model2, url, bypass)
