@@ -85,7 +85,7 @@ To start the web-service locally:
 
 ```
 # (Installs flask, lxml, requests etc and lemonade)
-python3 -m pip install requirements.txt 
+python3 -m pip install -r requirements.txt 
 
 # To run
 python3 -m tagtransfer.webapp --num-workers 4
@@ -103,8 +103,14 @@ bypass  Easy switch to bypass translation and render the original page, useful
         in debugging.
 ```
 
+Model codes can be chosen from those listed above via `bergamot ls`.
+
+Here's an example link:
+* http://localhost:8080/?url=https://www.theguardian.com/uk&model=en-de-tiny&pivot=de-en-tiny&bypass=false
+
 Once the app is launched, links are modified to go through the translator again
 so as to conveniently check if translation works in a browsing workflow.
+
 
 Known downsides of running through python is sessions and single-page apps
 dependent heavily on JavaScript altering DOM will not work well with this
