@@ -18,8 +18,9 @@ def index():
     url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
     bypass = request.args.get("bypass", "false").lower() == "true"
     model1 = request.args.get("model", "en-de-tiny")
+    use_tidy = request.args.get("use_tidy", "false").lower() == "true"
     model2 = request.args.get("pivot", None)
-    translated = translator.translate_url(model1, model2, url, bypass)
+    translated = translator.translate_url(model1, model2, url, bypass, use_tidy)
 
     base_url = request.base_url
 
@@ -29,6 +30,7 @@ def index():
             "url": u,
             "model": model1,
             "bypass": str(bypass).lower(),
+            "use_tidy": use_tidy,
         }
 
         if model2 is not None:

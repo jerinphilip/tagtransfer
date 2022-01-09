@@ -11,13 +11,27 @@ import tidylib
 def convert(node):
     return etree.tostring(node, method="html", encoding="utf-8").decode("utf-8")
 
+def tidy(page):
+    tidypage, errors = tidylib.tidy_document(page, TIDY_PRESETS)
+    return tidypage
 
-BASE_OPTIONS = {
+def strip_doctype(page):
+    assert(page[0] == '<')
+    idx = page.find('>')
+    # Check it is DOCTYPE we are stripping. Otherwise, don't strp.
+    query = '<!DOCTYPE'
+    n = min(idx+1, len(query))
+    if page[:n].lower() == query.lower():
+        page = page[idx+1:]
+    return page
+
+
+TIDY_PRESETS = {
     "indent": 1,  # Pretty; not too much of a performance hit
     "tidy-mark": 0,  # No tidy meta tag in output
     "wrap": 0,  # No wrapping
     "alt-text": "",  # Help ensure validation
-    "doctype": "html5",  # Little sense in transitional for tool-generated markup...
+    "doctype": "auto",  # Little sense in transitional for tool-generated markup...
     "force-output": 1,  # May not get what you expect but you will get something
     "output-html": 1,
     "drop-empty-elements": 0,
@@ -40,21 +54,18 @@ class HTMLTranslator:
         self.cache = {}
 
     def translate(
-        self, model: str, pivot: t.Union[str, None], page: str, bypass: bool = False
+            self, model: str, pivot: t.Union[str, None], page: str, bypass: bool = False, use_tidy: bool = True
     ):
         options = ResponseOptions(HTML=True)
 
         # Get nodes. Replace them in place.
-        def tidy(tree):
-            page = convert(tree)
-            tidypage, errors = tidylib.tidy_document(page, BASE_OPTIONS)
-            modtree = html.fromstring(tidypage)
-            return convert(modtree)
+            # modtree = html.fromstring(tidypage)
+            # return convert(modtree)
 
-        tree = html.fromstring(page)
+        maybeTidy = lambda tree: strip_doctype(tidy(page)) if use_tidy else strip_doctype(page)
 
         if bypass:
-            return self.postprocess(convert(tree))
+            return self.postprocess(strip_doctype(page))
         else:
             response = None
             if pivot is not None:
@@ -63,16 +74,14 @@ class HTMLTranslator:
                 [response] = self.service.pivot(
                     source_to_pivot_model,
                     pivot_to_target_model,
-                    # bergamot.VectorString([convert(tree)]),
-                    bergamot.VectorString([tidy(tree)]),
+                    bergamot.VectorString([maybeTidy(page)]),
                     options,
                 )
             else:
                 forward_model = self.get_model(model)
                 [response] = self.service.translate(
                     forward_model,
-                    # bergamot.VectorString([convert(tree)]),
-                    bergamot.VectorString([tidy(tree)]),
+                    bergamot.VectorString([maybeTidy(page)]),
                     options,
                 )
 
@@ -85,7 +94,7 @@ class HTMLTranslator:
         return self.cache[code]
 
     def postprocess(self, text):
-        return text
+        return tidy(text)
 
     def intercept(self, url):
         response = requests.get(
@@ -111,7 +120,7 @@ class HTMLTranslator:
             tree, method="html", pretty_print=True, encoding="utf-8"
         ).decode()
 
-    def translate_url(self, model1: str, model2: str, url: str, bypass: bool = False):
+    def translate_url(self, model1: str, model2: str, url: str, bypass: bool = False, use_tidy = False):
         # Intercept the URL to obtain source and show translation
         document = self.intercept(url)
 
@@ -121,6 +130,8 @@ class HTMLTranslator:
             model2,
             document,
             bypass,
+            use_tidy
         )
+        
+        return translated
 
-        return f"<!DOCTYPE html>\n{translated}"
