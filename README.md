@@ -96,17 +96,19 @@ whether to use an additional model to pivot and the URL to translate is
 controlled by the following `GET` args.
 
 ```
-url     url to translate
-model   model-code to use in forward translation
-pivot   model-code to use in pivoting after forward translation. This is optional.
-bypass  Easy switch to bypass translation and render the original page, useful
-        in debugging.
+url       url to translate
+model     model-code to use in forward translation
+pivot     model-code to use in pivoting after forward translation. This is optional.
+bypass    Easy switch to bypass translation and render the original page, useful
+          in debugging.
+use_tidy  use 3rd-party HTML5 sanitization library to no crash when malformed
+          HTML is sent to pipeline.  
 ```
 
 Model codes can be chosen from those listed above via `bergamot ls`.
 
 Here's an example link:
-* http://localhost:8080/?url=https://www.thehindu.com&model=en-de-tiny&pivot=de-en-tiny&bypass=false
+* http://localhost:8080/?url=https://www.thehindu.com&model=en-de-tiny&pivot=de-en-tiny&bypass=false&use_tidy=true
 
 Once the app is launched, links are modified to go through the translator again
 so as to conveniently check if translation works in a browsing workflow.

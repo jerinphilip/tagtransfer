@@ -18,8 +18,9 @@ def index():
     url = request.args.get("url", "https://en.wikipedia.org/wiki/Physics")
     bypass = request.args.get("bypass", "false").lower() == "true"
     model1 = request.args.get("model", "en-de-tiny")
+    use_tidy = request.args.get("use_tidy", "true").lower() == "true"
     model2 = request.args.get("pivot", None)
-    translated = translator.translate_url(model1, model2, url, bypass)
+    translated = translator.translate_url(model1, model2, url, bypass, use_tidy)
 
     base_url = request.base_url
 
@@ -28,13 +29,14 @@ def index():
         params = {
             "url": u,
             "model": model1,
-            "bypass": bypass,
+            "bypass": str(bypass).lower(),
+            "use_tidy": str(use_tidy).lower(),
         }
 
         if model2 is not None:
             params["pivot"] = model2
 
-        paramstring = urllib.parse.urlencode(params)
+        paramstring = urllib.parse.urlencode(params, safe=":/")
         return f"{base_url}/?{paramstring}"
 
     # I only need minimum clickable links transferred, so going for <a>.
