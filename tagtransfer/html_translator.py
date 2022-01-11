@@ -11,18 +11,20 @@ import tidylib
 def convert(node):
     return etree.tostring(node, method="html", encoding="utf-8").decode("utf-8")
 
+
 def tidy(page):
     tidypage, errors = tidylib.tidy_document(page, TIDY_PRESETS)
     return tidypage
 
+
 def strip_doctype(page):
-    assert(page[0] == '<')
-    idx = page.find('>')
+    assert page[0] == "<"
+    idx = page.find(">")
     # Check it is DOCTYPE we are stripping. Otherwise, don't strp.
-    query = '<!DOCTYPE'
-    n = min(idx+1, len(query))
+    query = "<!DOCTYPE"
+    n = min(idx + 1, len(query))
     if page[:n].lower() == query.lower():
-        page = page[idx+1:]
+        page = page[idx + 1 :]
     return page
 
 
@@ -54,15 +56,22 @@ class HTMLTranslator:
         self.cache = {}
 
     def translate(
-            self, model: str, pivot: t.Union[str, None], page: str, bypass: bool = False, use_tidy: bool = True
+        self,
+        model: str,
+        pivot: t.Union[str, None],
+        page: str,
+        bypass: bool = False,
+        use_tidy: bool = True,
     ):
         options = ResponseOptions(HTML=True)
 
         # Get nodes. Replace them in place.
-            # modtree = html.fromstring(tidypage)
-            # return convert(modtree)
+        # modtree = html.fromstring(tidypage)
+        # return convert(modtree)
 
-        maybeTidy = lambda tree: strip_doctype(tidy(page)) if use_tidy else strip_doctype(page)
+        maybeTidy = (
+            lambda tree: strip_doctype(tidy(page)) if use_tidy else strip_doctype(page)
+        )
 
         if bypass:
             return self.postprocess(strip_doctype(page))
@@ -120,18 +129,13 @@ class HTMLTranslator:
             tree, method="html", pretty_print=True, encoding="utf-8"
         ).decode()
 
-    def translate_url(self, model1: str, model2: str, url: str, bypass: bool = False, use_tidy = False):
+    def translate_url(
+        self, model1: str, model2: str, url: str, bypass: bool = False, use_tidy=False
+    ):
         # Intercept the URL to obtain source and show translation
         document = self.intercept(url)
 
         # Translate document HTML
-        translated = self.translate(
-            model1,
-            model2,
-            document,
-            bypass,
-            use_tidy
-        )
-        
-        return translated
+        translated = self.translate(model1, model2, document, bypass, use_tidy)
 
+        return translated
