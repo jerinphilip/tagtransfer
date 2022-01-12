@@ -19,7 +19,8 @@ jobs:
           submodules: recursive
       - name: Install Dependencies
         run: |-
-            python3 -m pip install black
+            python3 -m pip install black isort
       - name: Run check for formatting using black
         run: |
             python3 -m black --check tagtransfer
+            python3 -m --diff --check --profile black tagtransfer
