@@ -1,4 +1,4 @@
-name: "Python Style"
+name: "py-style"
 'on':
   push:
     branches:
@@ -10,7 +10,7 @@ name: "Python Style"
 
 jobs:
     python-ubuntu:
-      name: "Black formatter"
+      name: "formatting standardization helpers"
       runs-on: "ubuntu-latest"
       steps:
       - name: Checkout
@@ -23,4 +23,4 @@ jobs:
       - name: Run check for formatting using black
         run: |
             python3 -m black --check tagtransfer
-            python3 -m --diff --check --profile black tagtransfer
+            python3 -m isort --diff --check --profile black tagtransfer
