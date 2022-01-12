@@ -17,10 +17,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Install Dependencies
+      - name: "Install Dependencies: black, isort"
         run: |-
             python3 -m pip install black isort
-      - name: Run check for formatting using black
+
+      - name: "Run check for formatting using black"
         run: |
             python3 -m black --check tagtransfer
+
+      - name: "Run check for formatting using isort"
+        run: |
             python3 -m isort --diff --check --profile black tagtransfer
