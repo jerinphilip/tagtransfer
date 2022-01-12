@@ -1,10 +1,11 @@
-from flask import Flask
-from flask import request
-from lxml import html, etree
-import requests
-from .html_translator import HTMLTranslator
 import argparse
 import urllib
+
+import requests
+from flask import Flask, request
+from lxml import etree, html
+
+from .html_translator import HTMLTranslator
 
 # from html import unescape
 # import re
