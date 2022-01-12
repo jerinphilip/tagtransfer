@@ -1,14 +1,14 @@
-import json
-import sacrebleu
 import argparse
-from lxml import etree
-from collections import defaultdict, namedtuple
+import json
 import sys
 import typing as t
+from collections import defaultdict, namedtuple
 
 import bergamot
-from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
+import sacrebleu
+from bergamot import Response, ResponseOptions, Service, ServiceConfig, TranslationModel
 from bergamot.config import repository
+from lxml import etree
 
 SACREBLEU_METRIC = "bleu"
 

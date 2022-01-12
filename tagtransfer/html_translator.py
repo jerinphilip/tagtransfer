@@ -1,11 +1,12 @@
-import bergamot
-from bergamot import Service, Response, ResponseOptions, ServiceConfig, TranslationModel
-import cssselect
-from lxml import html, etree
-from bergamot.config import repository
 import typing as t
+
+import bergamot
+import cssselect
 import requests
 import tidylib
+from bergamot import Response, ResponseOptions, Service, ServiceConfig, TranslationModel
+from bergamot.config import repository
+from lxml import etree, html
 
 
 def convert(node):
