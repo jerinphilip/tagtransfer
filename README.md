@@ -130,7 +130,7 @@ First download an XML marked-up dataset from
 This can be done by using:
 
 ```
-bash scripts/download-data.sh ./
+bash scripts/download-data.sh 
 ```
 
 
@@ -139,9 +139,7 @@ translation dataset, please use the following command:
 
 ```
 python3 -m tagtransfer.xml_eval                                        \
-   --model-code en-de-tiny                                             \
-   --source-data localization-xml-mt-master/data/ende/ende_en_dev.json \
-   --target-data localization-xml-mt-master/data/ende/ende_de_dev.json 
+   --dataset-dir data/localization-xml-mt-master/data/
 ```
 
 If all works well, the output looks something like the following:
