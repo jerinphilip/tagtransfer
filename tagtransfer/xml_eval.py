@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 import typing as t
 from collections import defaultdict, namedtuple
@@ -149,21 +150,9 @@ if __name__ == "__main__":
     # Setup a parser.
     parser = argparse.ArgumentParser("Load a dataset, run tag transfer using bergamot")
     parser.add_argument(
-        "--source-data",
+        "--dataset-dir",
         type=str,
-        help="Path to json file from localization-xml-mt (salesforce)",
-        required=True,
-    )
-    parser.add_argument(
-        "--target-data",
-        type=str,
-        help="Path to json file from localization-xml-mt (salesforce)",
-        required=True,
-    )
-    parser.add_argument(
-        "--model-code",
-        type=str,
-        help="Model code from bergamot ls",
+        help="Path to extracted folder containing json data",
         required=True,
     )
     parser.add_argument(
@@ -208,8 +197,8 @@ if __name__ == "__main__":
 
     service = Service(config)
 
-    # What model are we using?
-    modelConfigPath = repository.modelConfigPath(args.model_code)
+    # What model are we using? HardCode en-de-tiny
+    modelConfigPath = repository.modelConfigPath("en-de-tiny")
     model = service.modelFromConfigPath(modelConfigPath)
 
     # Hardcode a bunch of options for now. TODO: improve
@@ -225,8 +214,8 @@ if __name__ == "__main__":
         return child_count > 0
 
     dataset = Dataset(
-        args.source_data,
-        args.target_data,
+        source_path=os.path.join(args.dataset_dir, f"ende/ende_en_dev.json"),
+        target_path=os.path.join(args.dataset_dir, f"ende/ende_de_dev.json"),
         filter_fn=filter_fn if not args.include_non_markup else lambda x: True,
     )
 
