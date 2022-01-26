@@ -4,8 +4,14 @@ import bergamot
 import cssselect
 import requests
 import tidylib
-from bergamot import Response, ResponseOptions, Service, ServiceConfig, TranslationModel
-from bergamot import REPOSITORY
+from bergamot import (
+    REPOSITORY,
+    Response,
+    ResponseOptions,
+    Service,
+    ServiceConfig,
+    TranslationModel,
+)
 from lxml import etree, html
 
 

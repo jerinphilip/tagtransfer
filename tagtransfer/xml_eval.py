@@ -7,8 +7,14 @@ from collections import defaultdict, namedtuple
 
 import bergamot
 import sacrebleu
-from bergamot import Response, ResponseOptions, Service, ServiceConfig, TranslationModel
-from bergamot import REPOSITORY
+from bergamot import (
+    REPOSITORY,
+    Response,
+    ResponseOptions,
+    Service,
+    ServiceConfig,
+    TranslationModel,
+)
 from lxml import etree
 
 SACREBLEU_METRIC = "bleu"
