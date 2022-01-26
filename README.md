@@ -24,26 +24,15 @@ For a visual sample of how good the render of the translated page is checkout
 
 ## Instructions to setup
 
-### Python-bindings via lemonade
+### Python-bindings
 
-Build bergamot python module with bindings to the C++ library from
-[lemonade](https://github.com/jerinphilip/lemonade). The library has to be
-built due to `-march=native` being present in builds, which
-takes advantage of vector-instructions to speed up translations.
+Go to https://github.com/browsermt/bergamot-translator/releases and pickup your
+pre-built bergamot-translator wheel (the following example uses python3.8 wheels):
 
-```bash
-# clone
-git clone https://github.com/jerinphilip/lemonade
-
-# Setup venv
-python3 -m venv env
-.env/bin/activate
-python3 -m pip install wheel # If wheel missing
-
-# Build wheel
-python3 setup.py bdist_wheel
-python3 -m pip install dist/bergamot-*.whl # Install the wheel file into virtual environment.
 ```
+python3 -m pip install bergamot-0.3.1+c0f311a-cp38-cp38-linux_x86_64.whl
+```
+
 
 To download the models and associated configuration files required to run
 applications in this repository, you may use the package-manager in bergamot
