@@ -5,7 +5,7 @@ import cssselect
 import requests
 import tidylib
 from bergamot import Response, ResponseOptions, Service, ServiceConfig, TranslationModel
-from bergamot.config import repository
+from bergamot import REPOSITORY
 from lxml import etree, html
 
 
@@ -99,7 +99,7 @@ class HTMLTranslator:
 
     def get_model(self, code):
         if code not in self.cache:
-            config = repository.modelConfigPath(code)
+            config = REPOSITORY.modelConfigPath("browsermt", code)
             self.cache[code] = self.service.modelFromConfigPath(config)
         return self.cache[code]
 

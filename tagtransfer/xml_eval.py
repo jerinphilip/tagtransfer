@@ -8,7 +8,7 @@ from collections import defaultdict, namedtuple
 import bergamot
 import sacrebleu
 from bergamot import Response, ResponseOptions, Service, ServiceConfig, TranslationModel
-from bergamot.config import repository
+from bergamot import REPOSITORY
 from lxml import etree
 
 SACREBLEU_METRIC = "bleu"
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     service = Service(config)
 
     # What model are we using? HardCode en-de-tiny
-    modelConfigPath = repository.modelConfigPath("en-de-tiny")
+    modelConfigPath = REPOSITORY.modelConfigPath("browsermt", "en-de-tiny")
     model = service.modelFromConfigPath(modelConfigPath)
 
     # Hardcode a bunch of options for now. TODO: improve
