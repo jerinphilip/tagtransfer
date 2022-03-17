@@ -174,12 +174,6 @@ if __name__ == "__main__":
         default=2000,
     )
     parser.add_argument(
-        "--cache-mutex-buckets",
-        type=int,
-        help="How many mutex buckets to use to reduce contention in cache among workers.",
-        default=20,
-    )
-    parser.add_argument(
         "--disable-markup-in-translation",
         action="store_true",
         help="Disable markup pipeline. Useful in diagnosing if things work without markup.",
@@ -199,7 +193,6 @@ if __name__ == "__main__":
     config = ServiceConfig()
     config.numWorkers = args.num_workers
     config.cacheSize = args.cache_size
-    config.cacheMutexBuckets = args.cache_mutex_buckets
 
     service = Service(config)
 
@@ -210,7 +203,7 @@ if __name__ == "__main__":
     # Hardcode a bunch of options for now. TODO: improve
     options = ResponseOptions()
     options.alignment = True
-    options.qualityScores = True
+    options.qualityScores = False
     options.HTML = not args.disable_markup_in_translation
 
     def filter_fn(pair):

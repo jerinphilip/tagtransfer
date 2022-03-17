@@ -30,7 +30,7 @@ Go to https://github.com/browsermt/bergamot-translator/releases and pickup your
 pre-built bergamot-translator wheel (the following example uses python3.8 wheels):
 
 ```
-python3 -m pip install bergamot-0.3.1+c0f311a-cp38-cp38-linux_x86_64.whl
+python3 -m pip install https://github.com/browsermt/bergamot-translator/releases/download/v0.4.2/bergamot-0.4.2-cp38-cp38-linux_x86_64.whl
 ```
 
 
