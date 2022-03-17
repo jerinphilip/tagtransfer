@@ -161,6 +161,9 @@ if __name__ == "__main__":
         help="Path to extracted folder containing json data",
         required=True,
     )
+
+    parser.add_argument("--split", type=str, choices=["train", "dev"], default="dev")
+
     parser.add_argument(
         "--num-workers",
         type=int,
@@ -178,11 +181,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Disable markup pipeline. Useful in diagnosing if things work without markup.",
     )
+
     parser.add_argument(
         "--include-non-markup",
         action="store_true",
         help="Only feed entries containing markup to the pipeline.",
     )
+
+    parser.add_argument("--log-level", type=str, default="off")
 
     add_sacreblue_dummy_args(parser)
     args = parser.parse_args()
@@ -190,10 +196,9 @@ if __name__ == "__main__":
     metric = sacrebleu.metrics.METRICS[SACREBLEU_METRIC](args)
 
     # TODO(jerinphilip): Improve syntax upstream.
-    config = ServiceConfig()
-    config.numWorkers = args.num_workers
-    config.cacheSize = args.cache_size
-
+    config = ServiceConfig(
+        numWorkers=args.num_workers, cacheSize=args.cache_size, logLevel=args.log_level
+    )
     service = Service(config)
 
     # What model are we using? HardCode en-de-tiny
@@ -213,8 +218,8 @@ if __name__ == "__main__":
         return child_count > 0
 
     dataset = Dataset(
-        source_path=os.path.join(args.dataset_dir, f"ende/ende_en_dev.json"),
-        target_path=os.path.join(args.dataset_dir, f"ende/ende_de_dev.json"),
+        source_path=os.path.join(args.dataset_dir, f"ende/ende_en_{args.split}.json"),
+        target_path=os.path.join(args.dataset_dir, f"ende/ende_de_{args.split}.json"),
         filter_fn=filter_fn if not args.include_non_markup else lambda x: True,
     )
 
@@ -226,6 +231,11 @@ if __name__ == "__main__":
     responses = service.translate(model, bergamot.VectorString(source_texts), options)
 
     # Produce metrics.
+    accuracy_stats = defaultdict(int)
+
+    with_tags = {"hypotheses": [], "references": [[]]}
+    without_tags = {"hypotheses": [], "references": [[]]}
+
     for idx in range(len(dataset)):
         pair = dataset[idx]
         response = responses[idx]
@@ -234,11 +244,39 @@ if __name__ == "__main__":
         print("[src] > ", response.source.text)
         print("[hyp] > ", response.target.text)
         print("[tgt] > ", pair.target)
+        assert "\n" not in response.source.text
+        assert "\n" not in response.target.text
+        assert "\n" not in pair.target
         bleu_with_tags = metric.sentence_score(response.target.text, [pair.target])
         bleu_without_tags = metric.sentence_score(
             stringify_children(response.target.text), [stringify_children(pair.target)]
         )
         print("With tags: ", bleu_with_tags)
         print("Without tags: ", bleu_without_tags)
-        print("Matches perfectly? ", "Yes" if isMatch else "No")
+        print("Target structures (HTML) match perfectly? ", "Yes" if isMatch else "No")
         print()
+
+        with_tags["hypotheses"].append(response.target.text)
+        with_tags["references"][0].append(pair.target)
+
+        without_tags["hypotheses"].append(stringify_children(response.target.text))
+        without_tags["references"][0].append(stringify_children(pair.target))
+
+        accuracy_stats["correct"] += int(isMatch)
+        accuracy_stats["wrong"] += int(not isMatch)
+
+    accuracy = accuracy_stats["correct"] / (
+        accuracy_stats["correct"] + accuracy_stats["wrong"]
+    )
+
+    with_tags_bleu = metric.corpus_score(
+        with_tags["hypotheses"], with_tags["references"]
+    )
+
+    without_tags_bleu = metric.corpus_score(
+        without_tags["hypotheses"], without_tags["references"]
+    )
+
+    print("Total XML accuracy: {:.2f}%".format(accuracy * 100))
+    print("Without tags corpus BLEU: {}".format(without_tags_bleu))
+    print("With tags corpus BLEU: {}".format(with_tags_bleu))
