@@ -188,14 +188,15 @@ if __name__ == "__main__":
         help="Only feed entries containing markup to the pipeline.",
     )
 
-    parser.add_argument("--log-level", type=str, default="off")
+    parser.add_argument(
+        "--log-level", type=str, default="off", help="Bergamot log level"
+    )
 
     add_sacreblue_dummy_args(parser)
     args = parser.parse_args()
 
     metric = sacrebleu.metrics.METRICS[SACREBLEU_METRIC](args)
 
-    # TODO(jerinphilip): Improve syntax upstream.
     config = ServiceConfig(
         numWorkers=args.num_workers, cacheSize=args.cache_size, logLevel=args.log_level
     )
@@ -244,9 +245,6 @@ if __name__ == "__main__":
         print("[src] > ", response.source.text)
         print("[hyp] > ", response.target.text)
         print("[tgt] > ", pair.target)
-        assert "\n" not in response.source.text
-        assert "\n" not in response.target.text
-        assert "\n" not in pair.target
         bleu_with_tags = metric.sentence_score(response.target.text, [pair.target])
         bleu_without_tags = metric.sentence_score(
             stringify_children(response.target.text), [stringify_children(pair.target)]
