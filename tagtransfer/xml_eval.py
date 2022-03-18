@@ -192,6 +192,19 @@ if __name__ == "__main__":
         "--log-level", type=str, default="off", help="Bergamot log level"
     )
 
+    langpair_to_models = {
+        "enfi": ("opus", "eng-fin-tiny"),
+        "ende": ("browsermt", "en-de-tiny"),
+    }
+
+    parser.add_argument(
+        "--langpair",
+        type=str,
+        required=True,
+        help="lang-pair to use",
+        choices=langpair_to_models.keys(),
+    )
+
     add_sacreblue_dummy_args(parser)
     args = parser.parse_args()
 
@@ -202,8 +215,9 @@ if __name__ == "__main__":
     )
     service = Service(config)
 
-    # What model are we using? HardCode en-de-tiny
-    modelConfigPath = REPOSITORY.modelConfigPath("browsermt", "en-de-tiny")
+    # What model are we using?
+    repository, model_name = langpair_to_models[args.langpair]
+    modelConfigPath = REPOSITORY.modelConfigPath(repository, model_name)
     model = service.modelFromConfigPath(modelConfigPath)
 
     # Hardcode a bunch of options for now. TODO: improve
@@ -218,9 +232,16 @@ if __name__ == "__main__":
         child_count = len(tree.xpath(".//*"))
         return child_count > 0
 
+    src_lang, tgt_lang = args.langpair[:2], args.langpair[2:]
     dataset = Dataset(
-        source_path=os.path.join(args.dataset_dir, f"ende/ende_en_{args.split}.json"),
-        target_path=os.path.join(args.dataset_dir, f"ende/ende_de_{args.split}.json"),
+        source_path=os.path.join(
+            args.dataset_dir,
+            f"{args.langpair}/{args.langpair}_{src_lang}_{args.split}.json",
+        ),
+        target_path=os.path.join(
+            args.dataset_dir,
+            f"{args.langpair}/{args.langpair}_{tgt_lang}_{args.split}.json",
+        ),
         filter_fn=filter_fn if not args.include_non_markup else lambda x: True,
     )
 
