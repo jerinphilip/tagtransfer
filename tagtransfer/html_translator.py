@@ -53,7 +53,6 @@ class HTMLTranslator:
         config = ServiceConfig(
             numWorkers=num_workers,
             cacheSize=cache_size,
-            cacheMutexBuckets=num_workers,
         )
 
         self.service = Service(config)
