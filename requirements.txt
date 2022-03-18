@@ -9,3 +9,4 @@ tabulate==0.8.9
 cssselect
 flask
 requests
+pytidylib
