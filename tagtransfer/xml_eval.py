@@ -220,11 +220,9 @@ if __name__ == "__main__":
     modelConfigPath = REPOSITORY.modelConfigPath(repository, model_name)
     model = service.modelFromConfigPath(modelConfigPath)
 
-    # Hardcode a bunch of options for now. TODO: improve
-    options = ResponseOptions()
-    options.alignment = True
-    options.qualityScores = False
-    options.HTML = not args.disable_markup_in_translation
+    options = ResponseOptions(
+        alignment=True, HTML=not args.disable_markup_in_translation
+    )
 
     def filter_fn(pair):
         # Only if the actual text contains tags, need we bother.
