@@ -20,6 +20,53 @@ from lxml import etree
 SACREBLEU_METRIC = "bleu"
 
 
+def split_by_tags(hypothesis, reference):
+    tagTypeList = [
+        "ph",
+        "xref",
+        "uicontrol",
+        "b",
+        "codeph",
+        "parmname",
+        "i",
+        "title",
+        "menucascade",
+        "varname",
+        "userinput",
+        "filepath",
+        "term",
+        "systemoutput",
+        "cite",
+        "li",
+        "ul",
+        "p",
+        "note",
+        "indexterm",
+        "u",
+        "fn",
+    ]
+    tagBegList = ["<" + t + ">" for t in tagTypeList]
+    tagEndList = ["</" + t + ">" for t in tagTypeList]
+    tagList = tagBegList + tagEndList
+
+    DUMMY = "##SUPER_UNLIKELY_TOKEN##"
+
+    for tag in tagList:
+        reference = reference.replace(tag, DUMMY)
+        hypothesis = hypothesis.replace(tag, DUMMY)
+
+    reference = reference.split(DUMMY)
+    hypothesis = hypothesis.split(DUMMY)
+
+    references, hypotheses = [], []
+    for hyp, ref in zip(hypothesis, reference):
+        if hyp != "" and ref != "":
+            hypotheses.append(hyp)
+            references.append(ref)
+
+    return (hypotheses, references)
+
+
 class MarkedUpPair:
     """
     namedtuple is not editable after creation, so we have this record type.
@@ -221,7 +268,7 @@ if __name__ == "__main__":
     model = service.modelFromConfigPath(modelConfigPath)
 
     options = ResponseOptions(
-        alignment=True, HTML=not args.disable_markup_in_translation
+        alignment=True, HTML=not args.disable_markup_in_translation, qualityScores=False
     )
 
     def filter_fn(pair):
@@ -273,8 +320,15 @@ if __name__ == "__main__":
         print("Target structures (HTML) match perfectly? ", "Yes" if isMatch else "No")
         print()
 
-        with_tags["hypotheses"].append(response.target.text)
-        with_tags["references"][0].append(pair.target)
+        hypotheses, references = split_by_tags(response.target.text, pair.target)
+        if isMatch:
+            assert len(hypotheses) == len(references)
+            with_tags["hypotheses"].extend(hypotheses)
+            with_tags["references"][0].extend(references)
+        else:
+            emptyEquivalent = ["" for _ in references]
+            with_tags["hypotheses"].extend(emptyEquivalent)
+            with_tags["references"][0].extend(references)
 
         without_tags["hypotheses"].append(stringify_children(response.target.text))
         without_tags["references"][0].append(stringify_children(pair.target))
