@@ -63,6 +63,9 @@ def split_by_tags(hypothesis, reference):
         if hyp != "" and ref != "":
             hypotheses.append(hyp)
             references.append(ref)
+        else:
+            hypotheses.append(DUMMY)
+            references.append(DUMMY)
 
     return (hypotheses, references)
 
