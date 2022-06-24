@@ -10,3 +10,4 @@ cssselect
 flask
 requests
 pytidylib
+bergamot

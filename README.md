@@ -24,14 +24,16 @@ For a visual sample of how good the render of the translated page is checkout
 
 ## Instructions to setup
 
-### Python-bindings
+### Install reqiurements
 
-Install bergamot python package. Using a virtual environment is recommended.
+We need `requests` for work with webpages, a few `html` parsing libraries and
+`bergamot` all of which is currently in `requirements.txt`. Using a virtual
+environment is recommended.
 
 ```
+# (Installs flask, lxml, requests, bergamot)
 python3 -m pip install bergamot
 ```
-
 
 To download the models and associated configuration files required to run
 applications in this repository, you may use the package-manager in bergamot
@@ -72,8 +74,6 @@ resources (css, images) load and page-flow is not affected.
 To start the web-service locally:
 
 ```
-# (Installs flask, lxml, requests etc and lemonade)
-python3 -m pip install -r requirements.txt 
 
 # To run
 python3 -m tagtransfer.webapp --num-workers 4
